@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 
 export default async function JourneysPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data: { user },

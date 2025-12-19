@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import ActivityCheckIn from '@/components/features/ActivityCheckIn';
 
 export default async function ActivitiesPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data: { user },

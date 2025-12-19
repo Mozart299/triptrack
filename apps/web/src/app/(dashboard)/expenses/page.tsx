@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import AddExpenseForm from '@/components/features/AddExpenseForm';
 
 export default async function ExpensesPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data: { user },
