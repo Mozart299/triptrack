@@ -1,101 +1,159 @@
-# Triptrack
+# TripTrack
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+A mobile-first trip tracking and expense management app built for your Nairobi adventure starting Dec 24th.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## Features
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+- **Journey Tracking**: Create and manage trips with dates, destinations, and participants
+- **Activity Management**: Plan and track activities throughout your journey
+- **Expense Splitting**: Record expenses and automatically split costs among participants
+- **Mobile-First Design**: Optimized for mobile devices with responsive Tailwind CSS
 
-## Run tasks
+## Tech Stack
 
-To run the dev server for your app, use:
+- **Frontend**: Next.js 15 (App Router) + TypeScript
+- **Styling**: Tailwind CSS (mobile-first)
+- **Backend**: Supabase (PostgreSQL + Auth + Storage)
+- **Monorepo**: Nx
 
-```sh
+## Project Structure
+
+```
+triptrack/
+├── apps/
+│   └── web/                    # Next.js app
+│       └── src/
+│           ├── app/            # App Router pages
+│           ├── components/     # Reusable components
+│           │   ├── ui/         # UI primitives
+│           │   └── layout/     # Layout components
+│           ├── features/       # Feature modules
+│           │   ├── journeys/   # Journey management
+│           │   ├── activities/ # Activity management
+│           │   ├── expenses/   # Expense tracking
+│           │   └── auth/       # Authentication
+│           ├── lib/
+│           │   └── supabase/   # Supabase clients
+│           ├── types/          # TypeScript types
+│           ├── utils/          # Utility functions
+│           └── hooks/          # Custom React hooks
+├── supabase-schema.sql         # Database schema
+└── package.json
+```
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- A Supabase account (free tier works great)
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Set Up Supabase
+
+1. Go to [Supabase](https://supabase.com) and create a new project
+2. Once your project is ready, go to **Settings > API**
+3. Copy your **Project URL** and **anon/public key**
+
+### 3. Set Up the Database
+
+1. In your Supabase project, go to the **SQL Editor**
+2. Copy the contents of `supabase-schema.sql`
+3. Paste and run it in the SQL Editor
+4. This will create all tables, indexes, and Row Level Security policies
+
+### 4. Configure Environment Variables
+
+1. Update `.env.local` with your Supabase credentials:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your-project-url.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+   NEXT_PUBLIC_APP_URL=http://localhost:4200
+   ```
+
+2. Also update `apps/web/.env.local` with the same values
+
+### 5. Run the Development Server
+
+```bash
 npx nx dev web
 ```
 
-To create a production bundle:
+The app will be available at `http://localhost:4200`
 
-```sh
+## Database Schema
+
+### Tables
+
+- **profiles**: User profiles (extends Supabase auth.users)
+- **journeys**: Trip/travel information
+- **journey_participants**: Links users to shared journeys
+- **activities**: Activities and events during journeys
+- **expenses**: Expense tracking with split functionality
+
+### Key Features
+
+- Row Level Security (RLS) enabled on all tables
+- Automatic profile creation on user signup
+- Automatic timestamp updates
+- Optimized indexes for common queries
+
+## Nx Commands
+
+### Development
+
+```bash
+# Run dev server
+npx nx dev web
+
+# Run tests
+npx nx test web
+
+# Lint code
+npx nx lint web
+
+# Build for production
 npx nx build web
+
+# View project graph
+npx nx graph
 ```
 
-To see all available targets to run for a project, run:
+## MVP Scope (For Nairobi Trip - Dec 24th)
 
-```sh
-npx nx show project web
-```
+1. **Authentication**
+   - Sign up / Sign in with email
+   - Profile management
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+2. **Journey Management**
+   - Create journey for Nairobi
+   - View journey details
+   - Update journey status
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+3. **Activity Tracking**
+   - Add activities
+   - Mark activities as complete
+   - View activity timeline
 
-## Add new projects
+4. **Expense Management**
+   - Add expenses
+   - Categorize expenses
+   - Split expenses among participants
+   - View expense summary
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
+## Next Steps
 
-Use the plugin's generator to create new projects.
+1. Build authentication pages (`/login`, `/signup`)
+2. Create journey dashboard
+3. Implement activity management UI
+4. Build expense tracking and splitting features
+5. Add mobile PWA support
 
-To generate a new application, use:
+## License
 
-```sh
-npx nx g @nx/next:app demo
-```
-
-To generate a new library, use:
-
-```sh
-npx nx g @nx/react:lib mylib
-```
-
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
-
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Set up CI!
-
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
-```
-
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
-
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
-```
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+MIT
