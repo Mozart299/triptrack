@@ -39,9 +39,7 @@ export async function middleware(request: NextRequest) {
   );
 
   // Refreshing the auth token
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+   await supabase.auth.getUser();
 
   return supabaseResponse;
 }
