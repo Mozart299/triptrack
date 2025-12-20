@@ -96,51 +96,125 @@ ALTER TABLE journey_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 
+-- Helper to check journey membership (text wrapper).
+-- `auth.uid()` returns text in some contexts, so provide a TEXT-accepting overload
+-- that casts to UUID and checks membership. This must be defined before
+-- policies that call it to avoid "function does not exist" errors.
+CREATE OR REPLACE FUNCTION public.is_journey_participant(
+  p_journey_id UUID,
+  p_user_id TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT EXISTS(
+    SELECT 1 FROM public.journey_participants
+    WHERE journey_id = p_journey_id AND user_id = p_user_id::uuid
+  );
+$$;
+
+-- UUID-UUID overload: allow callers that already have UUID typed user_id
+CREATE OR REPLACE FUNCTION public.is_journey_participant(
+  p_journey_id UUID,
+  p_user_id UUID
+)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT EXISTS(
+    SELECT 1 FROM public.journey_participants
+    WHERE journey_id = p_journey_id AND user_id = p_user_id
+  );
+$$;
+
+-- Helpers to check if a user is an owner for a journey.
+CREATE OR REPLACE FUNCTION public.is_journey_participant_owner(
+  p_journey_id UUID,
+  p_user_id TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT EXISTS(
+    SELECT 1 FROM public.journey_participants
+    WHERE journey_id = p_journey_id AND user_id = p_user_id::uuid AND role = 'owner'
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_journey_participant_owner(
+  p_journey_id UUID,
+  p_user_id UUID
+)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT EXISTS(
+    SELECT 1 FROM public.journey_participants
+    WHERE journey_id = p_journey_id AND user_id = p_user_id AND role = 'owner'
+  );
+$$;
+
 -- Profiles policies
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON profiles;
 CREATE POLICY "Public profiles are viewable by everyone"
   ON profiles FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile"
   ON profiles FOR UPDATE
   USING (auth.uid() = id);
 
--- Journeys policies
+DROP POLICY IF EXISTS "Users can view their own journeys" ON journeys;
 CREATE POLICY "Users can view their own journeys"
   ON journeys FOR SELECT
   USING (
     auth.uid() = user_id
-    OR auth.uid() IN (
-      SELECT user_id FROM journey_participants WHERE journey_id = journeys.id
-    )
+    OR public.is_journey_participant(id, auth.uid())
   );
 
+DROP POLICY IF EXISTS "Users can create their own journeys" ON journeys;
 CREATE POLICY "Users can create their own journeys"
   ON journeys FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own journeys" ON journeys;
 CREATE POLICY "Users can update their own journeys"
   ON journeys FOR UPDATE
   USING (
     auth.uid() = user_id
-    OR auth.uid() IN (
-      SELECT user_id FROM journey_participants WHERE journey_id = journeys.id AND role = 'owner'
-    )
+    OR public.is_journey_participant_owner(id, auth.uid())
   );
 
+DROP POLICY IF EXISTS "Users can delete their own journeys" ON journeys;
 CREATE POLICY "Users can delete their own journeys"
   ON journeys FOR DELETE
   USING (auth.uid() = user_id);
 
--- Journey participants policies
+DROP POLICY IF EXISTS "Users can view participants of their journeys" ON journey_participants;
 CREATE POLICY "Users can view participants of their journeys"
   ON journey_participants FOR SELECT
   USING (
-    auth.uid() IN (
-      SELECT user_id FROM journey_participants WHERE journey_id = journey_participants.journey_id
-    )
+    -- Allow a user to see their own participant row, any participant of the same journey,
+    -- or the journey owner. Use a SECURITY DEFINER helper to safely check membership
+    -- without causing RLS recursion.
+    auth.uid() = user_id
+    OR public.is_journey_participant(journey_participants.journey_id, auth.uid())
   );
 
+DROP POLICY IF EXISTS "Journey owners can add participants" ON journey_participants;
 CREATE POLICY "Journey owners can add participants"
   ON journey_participants FOR INSERT
   WITH CHECK (
@@ -149,6 +223,7 @@ CREATE POLICY "Journey owners can add participants"
     )
   );
 
+DROP POLICY IF EXISTS "Journey owners can remove participants" ON journey_participants;
 CREATE POLICY "Journey owners can remove participants"
   ON journey_participants FOR DELETE
   USING (
@@ -158,6 +233,7 @@ CREATE POLICY "Journey owners can remove participants"
   );
 
 -- Activities policies
+DROP POLICY IF EXISTS "Users can view activities in their journeys" ON activities;
 CREATE POLICY "Users can view activities in their journeys"
   ON activities FOR SELECT
   USING (
@@ -169,6 +245,7 @@ CREATE POLICY "Users can view activities in their journeys"
     )
   );
 
+DROP POLICY IF EXISTS "Users can create activities in their journeys" ON activities;
 CREATE POLICY "Users can create activities in their journeys"
   ON activities FOR INSERT
   WITH CHECK (
@@ -180,15 +257,18 @@ CREATE POLICY "Users can create activities in their journeys"
     )
   );
 
+DROP POLICY IF EXISTS "Users can update activities they created" ON activities;
 CREATE POLICY "Users can update activities they created"
   ON activities FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete activities they created" ON activities;
 CREATE POLICY "Users can delete activities they created"
   ON activities FOR DELETE
   USING (auth.uid() = user_id);
 
 -- Expenses policies
+DROP POLICY IF EXISTS "Users can view expenses in their journeys" ON expenses;
 CREATE POLICY "Users can view expenses in their journeys"
   ON expenses FOR SELECT
   USING (
@@ -200,6 +280,7 @@ CREATE POLICY "Users can view expenses in their journeys"
     )
   );
 
+DROP POLICY IF EXISTS "Users can create expenses in their journeys" ON expenses;
 CREATE POLICY "Users can create expenses in their journeys"
   ON expenses FOR INSERT
   WITH CHECK (
@@ -211,10 +292,12 @@ CREATE POLICY "Users can create expenses in their journeys"
     )
   );
 
+DROP POLICY IF EXISTS "Users can update expenses they created" ON expenses;
 CREATE POLICY "Users can update expenses they created"
   ON expenses FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete expenses they created" ON expenses;
 CREATE POLICY "Users can delete expenses they created"
   ON expenses FOR DELETE
   USING (auth.uid() = user_id);
@@ -229,21 +312,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Triggers for updated_at
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON profiles
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_journeys_updated_at ON journeys;
 CREATE TRIGGER update_journeys_updated_at
   BEFORE UPDATE ON journeys
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_activities_updated_at ON activities;
 CREATE TRIGGER update_activities_updated_at
   BEFORE UPDATE ON activities
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_expenses_updated_at ON expenses;
 CREATE TRIGGER update_expenses_updated_at
   BEFORE UPDATE ON expenses
   FOR EACH ROW
@@ -268,3 +355,60 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
+
+-- Read-only convenience view combining participant rows with profile info.
+CREATE OR REPLACE VIEW public.journey_participants_view AS
+SELECT
+  jp.id,
+  jp.journey_id,
+  jp.user_id,
+  jp.role,
+  jp.joined_at,
+  p.full_name,
+  p.avatar_url
+FROM public.journey_participants jp
+JOIN public.profiles p ON p.id = jp.user_id;
+
+-- Secure function to return participants for a journey. This runs as
+-- SECURITY DEFINER and enforces that the caller is either a participant
+-- or the journey owner using the `is_journey_participant` helper.
+CREATE OR REPLACE FUNCTION public.get_journey_participants(
+  p_journey_id UUID
+)
+RETURNS TABLE(
+  id UUID,
+  journey_id UUID,
+  user_id UUID,
+  role TEXT,
+  joined_at TIMESTAMP WITH TIME ZONE,
+  full_name TEXT,
+  avatar_url TEXT
+)
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT
+    jp.id,
+    jp.journey_id,
+    jp.user_id,
+    jp.role,
+    jp.joined_at,
+    p.full_name,
+    p.avatar_url
+  FROM public.journey_participants jp
+  JOIN public.profiles p ON p.id = jp.user_id
+  WHERE jp.journey_id = p_journey_id
+    AND (
+      public.is_journey_participant(p_journey_id, auth.uid())
+      OR auth.uid() = (
+        SELECT user_id FROM public.journeys WHERE id = p_journey_id
+      )
+    );
+$$;
+
+-- Allow authenticated users to call the secure function (they still only
+-- receive rows if the function's membership check passes).
+GRANT EXECUTE ON FUNCTION public.get_journey_participants(UUID) TO authenticated;
+
