@@ -13,8 +13,6 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  console.log('InviteParticipant rendered, open:', open);
-
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -85,10 +83,7 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
   return (
     <div>
       <button
-        onClick={() => {
-          console.log('Invite button clicked!');
-          setOpen(true);
-        }}
+        onClick={() => setOpen(true)}
         className="w-full mt-4 btn-secondary text-sm"
       >
         + Invite Participant
