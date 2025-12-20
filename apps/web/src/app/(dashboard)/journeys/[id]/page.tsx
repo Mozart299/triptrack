@@ -1,7 +1,8 @@
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
+import InviteParticipant from '@/components/features/InviteParticipant';
 import { createClient } from '@/lib/supabase/server';
-import type { Journey, Activity, Expense, JourneyParticipant, Profile } from '@/types';
+import type { Profile } from '@/types';
 
 interface JourneyDetailPageProps {
   params: Promise<{
@@ -158,7 +159,7 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="card">
           <div className="text-sm text-gray-600 mb-1">Total Expenses</div>
           <div className="text-2xl font-bold text-gray-900">
@@ -176,6 +177,12 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
           <div className="text-sm text-gray-600 mb-1">Participants</div>
           <div className="text-2xl font-bold text-gray-900">
             {participants?.length || 0}
+          </div>
+        </div>
+        <div className="card">
+          <div className="text-sm text-gray-600 mb-1">Estimated Budget</div>
+          <div className="text-2xl font-bold text-gray-900">
+            ${(activities?.reduce((s, a) => s + (a.estimated_cost || 0), 0) || 0).toFixed(2)}
           </div>
         </div>
       </div>
@@ -216,6 +223,9 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
                             <p className="text-sm text-gray-600 mt-1">
                               📍 {activity.location}
                             </p>
+                          )}
+                          {activity.estimated_cost !== undefined && activity.estimated_cost !== null && (
+                            <p className="text-sm text-gray-700 mt-2">💵 Estimated: ${activity.estimated_cost.toFixed(2)}</p>
                           )}
                         </div>
                         {activity.completed && (
@@ -269,70 +279,7 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
             )}
           </div>
 
-          {/* Expenses Section */}
-          <div className="card mt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Expenses</h2>
-              <Link
-                href={`/journeys/${id}/expenses/new`}
-                className="btn-primary text-sm"
-              >
-                + Add Expense
-              </Link>
-            </div>
-
-            {expenses && expenses.length > 0 ? (
-              <div className="space-y-3">
-                {expenses.slice(0, 5).map((expense) => (
-                  <div
-                    key={expense.id}
-                    className="flex items-center justify-between border-b border-gray-200 pb-3 last:border-b-0 last:pb-0"
-                  >
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">
-                        {expense.description}
-                      </h3>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {expense.category && (
-                          <span className="px-2 py-1 bg-gray-100 rounded mr-2">
-                            {expense.category}
-                          </span>
-                        )}
-                        {new Date(expense.created_at).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </div>
-                    </div>
-                    <div className="font-semibold text-gray-900">
-                      ${expense.amount.toFixed(2)}
-                    </div>
-                  </div>
-                ))}
-                {expenses.length > 5 && (
-                  <Link
-                    href={`/journeys/${id}/expenses`}
-                    className="text-primary-600 hover:text-primary-700 text-sm font-medium block text-center pt-2"
-                  >
-                    View all {expenses.length} expenses →
-                  </Link>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-2">💰</div>
-                <p className="text-gray-600 text-sm mb-4">
-                  No expenses tracked yet
-                </p>
-                <Link
-                  href={`/journeys/${id}/expenses/new`}
-                  className="btn-primary text-sm inline-block"
-                >
-                  Add Your First Expense
-                </Link>
-              </div>
-            )}
-          </div>
+          {/* Expenses removed for planning-only flow */}
         </div>
 
         {/* Sidebar */}
@@ -382,9 +329,8 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
               </div>
             )}
 
-            <button className="w-full mt-4 btn-secondary text-sm">
-              + Invite Participant
-            </button>
+            {/* Invite participant modal/button */}
+            <InviteParticipant journeyId={id} />
           </div>
 
           {/* Quick Actions */}

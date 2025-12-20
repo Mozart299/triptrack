@@ -67,7 +67,7 @@ export default async function ActivitiesPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-4 gap-3 mb-6">
         <div className="card text-center">
           <p className="text-2xl font-bold text-gray-900">
             {completed?.length || 0}
@@ -86,6 +86,15 @@ export default async function ActivitiesPage() {
           </p>
           <p className="text-sm text-gray-600">Upcoming</p>
         </div>
+      </div>
+      <div className="card text-center">
+        <p className="text-2xl font-bold text-gray-900">
+          {(() => {
+            const total = activities?.reduce((sum, a) => sum + (a.estimated_cost || 0), 0) || 0;
+            return `$${total.toFixed(2)}`;
+          })()}
+        </p>
+        <p className="text-sm text-gray-600">Estimated Budget</p>
       </div>
 
       {/* Ongoing Activities */}
@@ -138,6 +147,9 @@ export default async function ActivitiesPage() {
                       <p className="text-xs text-gray-500">
                         📍 {activity.location}
                       </p>
+                    )}
+                    {activity.estimated_cost !== undefined && activity.estimated_cost !== null && (
+                      <p className="text-sm text-gray-700 mt-2">💵 Estimated: ${activity.estimated_cost.toFixed(2)}</p>
                     )}
                     {activity.scheduled_at && (
                       <p className="text-xs text-gray-500 mt-1">

@@ -53,8 +53,13 @@ CREATE TABLE IF NOT EXISTS activities (
   scheduled_at TIMESTAMP WITH TIME ZONE,
   completed_at TIMESTAMP WITH TIME ZONE,
   category TEXT CHECK (category IN ('transport', 'accommodation', 'dining', 'sightseeing', 'entertainment', 'other')) DEFAULT 'other',
-  notes TEXT
+  notes TEXT,
+  estimated_cost NUMERIC(10, 2)
 );
+
+-- Add estimated_cost column if upgrading an existing database
+ALTER TABLE IF EXISTS activities
+  ADD COLUMN IF NOT EXISTS estimated_cost NUMERIC(10,2);
 
 -- Expenses table
 CREATE TABLE IF NOT EXISTS expenses (

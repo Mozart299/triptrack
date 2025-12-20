@@ -76,17 +76,11 @@ export default async function DashboardPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-2 gap-4 mt-6">
             <div>
               <p className="text-primary-100 text-sm mb-1">Activities</p>
               <p className="text-2xl font-bold">
                 {stats.completedActivities}/{stats.totalActivities}
-              </p>
-            </div>
-            <div>
-              <p className="text-primary-100 text-sm mb-1">Expenses</p>
-              <p className="text-2xl font-bold">
-                ${stats.totalExpenses.toFixed(0)}
               </p>
             </div>
             <div>
@@ -132,14 +126,7 @@ export default async function DashboardPage() {
           <h3 className="font-semibold text-gray-900 mb-1">Activities</h3>
           <p className="text-sm text-gray-600">Check-in to activities</p>
         </Link>
-        <Link
-          href="/expenses"
-          className="card hover:shadow-md transition-shadow"
-        >
-          <div className="text-3xl mb-2">💰</div>
-          <h3 className="font-semibold text-gray-900 mb-1">Expenses</h3>
-          <p className="text-sm text-gray-600">Track spending</p>
-        </Link>
+        {/* Expenses hidden for planning-only flow */}
       </div>
 
       {/* Recent Journeys */}

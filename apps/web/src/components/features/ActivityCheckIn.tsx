@@ -51,6 +51,9 @@ export default function ActivityCheckIn({ activity }: ActivityCheckInProps) {
           {activity.description && (
             <p className="text-sm text-gray-700 mb-2">{activity.description}</p>
           )}
+          {activity.estimated_cost !== undefined && activity.estimated_cost !== null && (
+            <p className="text-sm text-gray-700 mb-2">💵 Estimated: ${activity.estimated_cost.toFixed(2)}</p>
+          )}
           {activity.location && (
             <p className="text-xs text-gray-600 font-medium">
               📍 {activity.location}

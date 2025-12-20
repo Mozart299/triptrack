@@ -64,6 +64,7 @@ export interface Database {
           completed_at: string | null
           category: 'transport' | 'accommodation' | 'dining' | 'sightseeing' | 'entertainment' | 'other'
           notes: string | null
+          estimated_cost: number | null
         }
         Insert: {
           id?: string
@@ -78,6 +79,7 @@ export interface Database {
           completed_at?: string | null
           category?: 'transport' | 'accommodation' | 'dining' | 'sightseeing' | 'entertainment' | 'other'
           notes?: string | null
+          estimated_cost?: number | null
         }
         Update: {
           id?: string
@@ -92,6 +94,7 @@ export interface Database {
           completed_at?: string | null
           category?: 'transport' | 'accommodation' | 'dining' | 'sightseeing' | 'entertainment' | 'other'
           notes?: string | null
+          estimated_cost?: number | null
         }
       }
       expenses: {

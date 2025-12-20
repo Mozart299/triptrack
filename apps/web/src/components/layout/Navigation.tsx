@@ -24,7 +24,6 @@ export default function Navigation({ user }: NavigationProps) {
     { href: '/dashboard', label: 'Dashboard', icon: '🏠' },
     { href: '/journeys', label: 'Journeys', icon: '✈️' },
     { href: '/activities', label: 'Activities', icon: '📍' },
-    { href: '/expenses', label: 'Expenses', icon: '💰' },
   ];
 
   return (

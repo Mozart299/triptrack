@@ -22,9 +22,10 @@ export interface JourneyWithParticipants extends Journey {
   participant_count: number;
 }
 
-export interface ActivityWithExpenses extends Activity {
+export interface ActivityWithExpenses extends Omit<Activity, 'estimated_cost'> {
   expenses: Expense[];
   total_cost: number;
+  estimated_cost: number | null;
 }
 
 export interface JourneyStats {
@@ -32,6 +33,7 @@ export interface JourneyStats {
   total_activities: number;
   completed_activities: number;
   currency: string;
+  total_estimated_budget?: number;
 }
 
 export interface ExpenseSummary {
