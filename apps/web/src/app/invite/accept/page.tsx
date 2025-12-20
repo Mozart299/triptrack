@@ -12,7 +12,7 @@ export default async function InviteAcceptPage({ searchParams }: { searchParams:
   if (!invite) return <div>Invite not found or expired</div> as any;
 
   // If user is logged in, add participant
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabaseServer = (await import('@supabase/supabase-js')).createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
