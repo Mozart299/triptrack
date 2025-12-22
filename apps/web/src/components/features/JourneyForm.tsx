@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
-// Define the shape of our data
 interface JourneyFormData {
   title: string;
   description: string;
@@ -15,8 +14,8 @@ interface JourneyFormData {
 }
 
 interface JourneyFormProps {
-  initialData?: JourneyFormData; // If provided, we are in "Edit Mode"
-  journeyId?: string;            // Needed for updates
+  initialData?: JourneyFormData;
+  journeyId?: string;           
 }
 
 export default function JourneyForm({ initialData, journeyId }: JourneyFormProps) {
@@ -24,12 +23,11 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize state with existing data (Edit) or defaults (Create)
   const [formData, setFormData] = useState<JourneyFormData>({
     title: initialData?.title || '',
     description: initialData?.description || '',
     destination: initialData?.destination || '',
-    // Handle date formatting (YYYY-MM-DD) for inputs
+
     start_date: initialData?.start_date 
       ? new Date(initialData.start_date).toISOString().split('T')[0] 
       : '',
@@ -73,7 +71,6 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
         router.push(`/journeys/${journeyId}`);
 
       } else {
-        // --- CREATE MODE ---
         const { data: journey, error: createError } = await supabase
           .from('journeys')
           .insert({
@@ -90,7 +87,6 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
 
         if (createError) throw createError;
 
-        // Add owner as participant
         const { error: participantError } = await supabase
           .from('journey_participants')
           .insert({

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client'; // Note: using client client
+import { createClient } from '@/lib/supabase/client';
 
 export default function DeleteJourneyButton({ journeyId }: { journeyId: string }) {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -10,7 +10,6 @@ export default function DeleteJourneyButton({ journeyId }: { journeyId: string }
   const supabase = createClient();
 
   const handleDelete = async () => {
-    // 1. Safety check
     const confirmed = window.confirm(
       'Are you sure you want to delete this journey? This cannot be undone.'
     );
@@ -19,7 +18,7 @@ export default function DeleteJourneyButton({ journeyId }: { journeyId: string }
     setIsDeleting(true);
 
     try {
-      // 2. Delete from Supabase
+
       const { error } = await supabase
         .from('journeys')
         .delete()
@@ -31,9 +30,8 @@ export default function DeleteJourneyButton({ journeyId }: { journeyId: string }
         return;
       }
 
-      // 3. Redirect to the main list
       router.push('/journeys');
-      router.refresh(); // Refresh the cache to remove the item from the list
+      router.refresh();
     } catch (error) {
       console.error(error);
       setIsDeleting(false);

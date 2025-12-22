@@ -11,11 +11,9 @@ export default async function EditJourneyPage({ params }: EditJourneyPageProps) 
   const { id } = await params;
   const supabase = await createClient();
 
-  // 1. Check Auth
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  // 2. Fetch Journey
   const { data: journey, error } = await supabase
     .from('journeys')
     .select('*')
