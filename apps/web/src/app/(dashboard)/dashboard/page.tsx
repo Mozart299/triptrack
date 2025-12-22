@@ -26,26 +26,17 @@ export default async function DashboardPage() {
   // Get stats for active journey
   let stats = null;
   if (activeJourney) {
-    const [activitiesResult, expensesResult] = await Promise.all([
-      supabase
-        .from('activities')
-        .select('*')
-        .eq('journey_id', activeJourney.id),
-      supabase
-        .from('expenses')
-        .select('amount')
-        .eq('journey_id', activeJourney.id),
-    ]);
+    const activitiesResult = await supabase
+      .from('activities')
+      .select('*')
+      .eq('journey_id', activeJourney.id);
 
     const completedActivities =
       activitiesResult.data?.filter((a) => a.completed_at)?.length || 0;
-    const totalExpenses =
-      expensesResult.data?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
 
     stats = {
       totalActivities: activitiesResult.data?.length || 0,
       completedActivities,
-      totalExpenses,
     };
   }
 

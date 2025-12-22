@@ -38,7 +38,6 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
   // Fetch related data in parallel
   const [
     { data: activities },
-    { data: expenses },
     { data: participants },
   ] = await Promise.all([
     supabase
@@ -46,11 +45,6 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
       .select('*')
       .eq('journey_id', id)
       .order('scheduled_at', { ascending: true }),
-    supabase
-      .from('expenses')
-      .select('*')
-      .eq('journey_id', id)
-      .order('created_at', { ascending: false }),
     supabase
       .from('journey_participants')
       .select(`
@@ -66,7 +60,6 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
   ]);
 
   // Calculate stats
-  const totalExpenses = expenses?.reduce((sum, exp) => sum + (exp.amount || 0), 0) || 0;
   const completedActivities = activities?.filter(a => a.completed).length || 0;
 
   // Date calculations
@@ -159,13 +152,7 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="card">
-          <div className="text-sm text-gray-600 mb-1">Total Expenses</div>
-          <div className="text-2xl font-bold text-gray-900">
-            ${totalExpenses.toFixed(2)}
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="card">
           <div className="text-sm text-gray-600 mb-1">Activities</div>
           <div className="text-2xl font-bold text-gray-900">
