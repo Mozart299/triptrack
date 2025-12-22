@@ -226,7 +226,7 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
                         </p>
                       )}
 
-                      <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                      <div className="flex flex-wrap gap-3 text-xs text-gray-500 mb-3">
                         {scheduledAt && (
                           <div>
                             🕒 {scheduledAt.toLocaleDateString('en-US', {
@@ -245,6 +245,15 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
                             {activity.category}
                           </div>
                         )}
+                      </div>
+
+                      <div className="flex gap-2 pt-2 border-t border-gray-100">
+                        <Link
+                          href={`/journeys/${id}/activities/${activity.id}/edit`}
+                          className="flex-1 text-center px-3 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded transition-colors"
+                        >
+                          Edit
+                        </Link>
                       </div>
                     </div>
                   );

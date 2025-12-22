@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import ActivityCheckIn from '@/components/features/ActivityCheckIn';
+import ActivityActions from '@/components/features/ActivityActions';
 
 export default async function ActivitiesPage() {
   const supabase = await createClient();
@@ -51,12 +52,22 @@ export default async function ActivitiesPage() {
     .order('scheduled_at', { ascending: true });
 
   const now = new Date();
-  const upcoming = activities?.filter(
-    (a) => !a.completed_at && new Date(a.scheduled_at || '') > now
-  );
-  const ongoing = activities?.filter(
-    (a) => !a.completed_at && new Date(a.scheduled_at || '') <= now
-  );
+
+  // Separate activities into categories
+  const upcoming = activities?.filter((a) => {
+    if (a.completed_at) return false;
+    if (!a.scheduled_at) return false; // Unscheduled activities handled separately
+    return new Date(a.scheduled_at) > now;
+  });
+
+  const ongoing = activities?.filter((a) => {
+    if (a.completed_at) return false;
+    if (!a.scheduled_at) return false; // Unscheduled activities handled separately
+    return new Date(a.scheduled_at) <= now;
+  });
+
+  const unscheduled = activities?.filter((a) => !a.completed_at && !a.scheduled_at);
+
   const completed = activities?.filter((a) => a.completed_at);
 
   return (
@@ -67,7 +78,7 @@ export default async function ActivitiesPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className="card text-center">
           <p className="text-2xl font-bold text-gray-900">
             {completed?.length || 0}
@@ -86,15 +97,15 @@ export default async function ActivitiesPage() {
           </p>
           <p className="text-sm text-gray-600">Upcoming</p>
         </div>
-      </div>
-      <div className="card text-center">
-        <p className="text-2xl font-bold text-gray-900">
-          {(() => {
-            const total = activities?.reduce((sum, a) => sum + (a.estimated_cost || 0), 0) || 0;
-            return `$${total.toFixed(2)}`;
-          })()}
-        </p>
-        <p className="text-sm text-gray-600">Estimated Budget</p>
+        <div className="card text-center">
+          <p className="text-2xl font-bold text-gray-900">
+            {(() => {
+              const total = activities?.reduce((sum, a) => sum + (a.estimated_cost || 0), 0) || 0;
+              return `$${total.toFixed(2)}`;
+            })()}
+          </p>
+          <p className="text-sm text-gray-600">Estimated Budget</p>
+        </div>
       </div>
 
       {/* Ongoing Activities */}
@@ -106,6 +117,55 @@ export default async function ActivitiesPage() {
           <div className="space-y-3">
             {ongoing.map((activity) => (
               <ActivityCheckIn key={activity.id} activity={activity} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Unscheduled Activities */}
+      {unscheduled && unscheduled.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-3">Unscheduled</h2>
+          <div className="space-y-3">
+            {unscheduled.map((activity) => (
+              <div key={activity.id} className="card">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">
+                        {activity.category === 'dining'
+                          ? '🍽️'
+                          : activity.category === 'accommodation'
+                          ? '🏨'
+                          : activity.category === 'transport'
+                          ? '🚗'
+                          : activity.category === 'sightseeing'
+                          ? '🏛️'
+                          : activity.category === 'entertainment'
+                          ? '🎭'
+                          : '📍'}
+                      </span>
+                      <h3 className="font-semibold text-gray-900">
+                        {activity.title}
+                      </h3>
+                    </div>
+                    {activity.description && (
+                      <p className="text-sm text-gray-600 mb-2">
+                        {activity.description}
+                      </p>
+                    )}
+                    {activity.location && (
+                      <p className="text-xs text-gray-500">
+                        📍 {activity.location}
+                      </p>
+                    )}
+                    {activity.estimated_cost !== undefined && activity.estimated_cost !== null && (
+                      <p className="text-sm text-gray-700 mt-2">💵 Estimated: ${activity.estimated_cost.toFixed(2)}</p>
+                    )}
+                  </div>
+                </div>
+                <ActivityActions activityId={activity.id} journeyId={journey.id} />
+              </div>
             ))}
           </div>
         </div>
@@ -167,6 +227,7 @@ export default async function ActivitiesPage() {
                     )}
                   </div>
                 </div>
+                <ActivityActions activityId={activity.id} journeyId={journey.id} />
               </div>
             ))}
           </div>
@@ -193,6 +254,7 @@ export default async function ActivitiesPage() {
                     )}
                   </div>
                 </div>
+                <ActivityActions activityId={activity.id} journeyId={journey.id} />
               </div>
             ))}
           </div>
