@@ -15,11 +15,9 @@ export default async function ActivitiesPage() {
     redirect('/login');
   }
 
-  // Get user's active or most recent journey
   const { data: journeys } = await supabase
     .from('journeys')
     .select('*')
-    .eq('user_id', user.id)
     .order('start_date', { ascending: false })
     .limit(1);
 
@@ -44,7 +42,6 @@ export default async function ActivitiesPage() {
     );
   }
 
-  // Get activities for this journey
   const { data: activities } = await supabase
     .from('activities')
     .select('*')
@@ -53,16 +50,15 @@ export default async function ActivitiesPage() {
 
   const now = new Date();
 
-  // Separate activities into categories
   const upcoming = activities?.filter((a) => {
     if (a.completed_at) return false;
-    if (!a.scheduled_at) return false; // Unscheduled activities handled separately
+    if (!a.scheduled_at) return false; 
     return new Date(a.scheduled_at) > now;
   });
 
   const ongoing = activities?.filter((a) => {
     if (a.completed_at) return false;
-    if (!a.scheduled_at) return false; // Unscheduled activities handled separately
+    if (!a.scheduled_at) return false; 
     return new Date(a.scheduled_at) <= now;
   });
 
@@ -77,7 +73,6 @@ export default async function ActivitiesPage() {
         <p className="text-gray-600">{journey.title}</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className="card text-center">
           <p className="text-2xl font-bold text-gray-900">
@@ -108,7 +103,6 @@ export default async function ActivitiesPage() {
         </div>
       </div>
 
-      {/* Ongoing Activities */}
       {ongoing && ongoing.length > 0 && (
         <div className="mb-6">
           <h2 className="text-lg font-bold text-gray-900 mb-3">
@@ -122,7 +116,6 @@ export default async function ActivitiesPage() {
         </div>
       )}
 
-      {/* Unscheduled Activities */}
       {unscheduled && unscheduled.length > 0 && (
         <div className="mb-6">
           <h2 className="text-lg font-bold text-gray-900 mb-3">Unscheduled</h2>
@@ -171,7 +164,6 @@ export default async function ActivitiesPage() {
         </div>
       )}
 
-      {/* Upcoming Activities */}
       {upcoming && upcoming.length > 0 && (
         <div className="mb-6">
           <h2 className="text-lg font-bold text-gray-900 mb-3">Upcoming</h2>
@@ -234,7 +226,6 @@ export default async function ActivitiesPage() {
         </div>
       )}
 
-      {/* Completed Activities */}
       {completed && completed.length > 0 && (
         <div>
           <h2 className="text-lg font-bold text-gray-900 mb-3">Completed</h2>
