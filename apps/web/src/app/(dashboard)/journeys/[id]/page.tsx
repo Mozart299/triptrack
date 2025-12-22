@@ -3,6 +3,7 @@ import Link from 'next/link';
 import InviteParticipant from '@/components/features/InviteParticipant';
 import { createClient } from '@/lib/supabase/server';
 import type { Profile } from '@/types';
+import DeleteJourneyButton from '@/components/features/DeleteJourneyButton';
 
 interface JourneyDetailPageProps {
   params: Promise<{
@@ -10,7 +11,9 @@ interface JourneyDetailPageProps {
   }>;
 }
 
-export default async function JourneyDetailPage({ params }: JourneyDetailPageProps) {
+export default async function JourneyDetailPage({
+  params,
+}: JourneyDetailPageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
@@ -32,10 +35,7 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
     notFound();
   }
 
-  const [
-    { data: activities },
-    { data: participants },
-  ] = await Promise.all([
+  const [{ data: activities }, { data: participants }] = await Promise.all([
     supabase
       .from('activities')
       .select('*')
@@ -43,7 +43,8 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
       .order('scheduled_at', { ascending: true }),
     supabase
       .from('journey_participants')
-      .select(`
+      .select(
+        `
         *,
         profiles:user_id (
           id,
@@ -51,20 +52,26 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
           full_name,
           avatar_url
         )
-      `)
+      `,
+      )
       .eq('journey_id', id),
   ]);
 
   const isOwner = journey.user_id === user.id;
-  const completedActivities = activities?.filter(a => a.completed).length || 0;
+  const completedActivities =
+    activities?.filter((a) => a.completed).length || 0;
 
   const startDate = new Date(journey.start_date);
   const endDate = new Date(journey.end_date);
   const today = new Date();
   const isActive = today >= startDate && today <= endDate;
   const isCompleted = today > endDate;
-  const daysUntil = Math.ceil((startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  const tripDuration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const daysUntil = Math.ceil(
+    (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+  );
+  const tripDuration = Math.ceil(
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
 
   return (
     <div className="container-app py-6">
@@ -104,7 +111,8 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
                 })}
               </div>
               <div>
-                <span className="font-medium">Duration:</span> {tripDuration} day{tripDuration !== 1 ? 's' : ''}
+                <span className="font-medium">Duration:</span> {tripDuration}{' '}
+                day{tripDuration !== 1 ? 's' : ''}
               </div>
             </div>
           </div>
@@ -113,8 +121,8 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
               isActive
                 ? 'bg-green-100 text-green-700'
                 : isCompleted
-                ? 'bg-gray-100 text-gray-700'
-                : 'bg-blue-100 text-blue-700'
+                  ? 'bg-gray-100 text-gray-700'
+                  : 'bg-blue-100 text-blue-700'
             }`}
           >
             {isActive ? 'Active' : isCompleted ? 'Completed' : 'Planning'}
@@ -161,7 +169,10 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
         <div className="card">
           <div className="text-sm text-gray-600 mb-1">Estimated Budget</div>
           <div className="text-2xl font-bold text-gray-900">
-            ${(activities?.reduce((s, a) => s + (a.estimated_cost || 0), 0) || 0).toFixed(2)}
+            $
+            {(
+              activities?.reduce((s, a) => s + (a.estimated_cost || 0), 0) || 0
+            ).toFixed(2)}
           </div>
         </div>
       </div>
@@ -201,9 +212,13 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
                               📍 {activity.location}
                             </p>
                           )}
-                          {activity.estimated_cost !== undefined && activity.estimated_cost !== null && (
-                            <p className="text-sm text-gray-700 mt-2">💵 Estimated: ${activity.estimated_cost.toFixed(2)}</p>
-                          )}
+                          {activity.estimated_cost !== undefined &&
+                            activity.estimated_cost !== null && (
+                              <p className="text-sm text-gray-700 mt-2">
+                                💵 Estimated: $
+                                {activity.estimated_cost.toFixed(2)}
+                              </p>
+                            )}
                         </div>
                         {activity.completed && (
                           <span className="text-green-600 text-sm">✓</span>
@@ -219,7 +234,8 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
                       <div className="flex flex-wrap gap-3 text-xs text-gray-500 mb-3">
                         {scheduledAt && (
                           <div>
-                            🕒 {scheduledAt.toLocaleDateString('en-US', {
+                            🕒{' '}
+                            {scheduledAt.toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric',
                             })}{' '}
@@ -284,7 +300,8 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
                     >
                       <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold">
                         {profile?.full_name?.[0]?.toUpperCase() ||
-                         profile?.email?.[0]?.toUpperCase() || '?'}
+                          profile?.email?.[0]?.toUpperCase() ||
+                          '?'}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-gray-900 truncate">
@@ -326,9 +343,7 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
                 >
                   Edit Journey
                 </Link>
-                <button className="w-full btn-secondary text-sm text-red-600 hover:bg-red-50">
-                  Delete Journey
-                </button>
+                <DeleteJourneyButton journeyId={id} />
               </div>
             </div>
           )}
