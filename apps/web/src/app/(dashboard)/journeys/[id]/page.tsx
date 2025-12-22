@@ -14,7 +14,6 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
   const { id } = await params;
   const supabase = await createClient();
 
-  // Check authentication
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -23,19 +22,16 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
     redirect('/login');
   }
 
-  // Fetch journey data
   const { data: journey, error: journeyError } = await supabase
     .from('journeys')
     .select('*')
     .eq('id', id)
     .single();
 
-  // Handle errors
   if (journeyError || !journey) {
     notFound();
   }
 
-  // Fetch related data in parallel
   const [
     { data: activities },
     { data: participants },
@@ -59,10 +55,9 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
       .eq('journey_id', id),
   ]);
 
-  // Calculate stats
+  const isOwner = journey.user_id === user.id;
   const completedActivities = activities?.filter(a => a.completed).length || 0;
 
-  // Date calculations
   const startDate = new Date(journey.start_date);
   const endDate = new Date(journey.end_date);
   const today = new Date();
@@ -73,7 +68,6 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
 
   return (
     <div className="container-app py-6">
-      {/* Breadcrumb */}
       <div className="mb-6">
         <Link
           href="/journeys"
@@ -83,7 +77,6 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
         </Link>
       </div>
 
-      {/* Journey Header */}
       <div className="card mb-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
@@ -151,7 +144,6 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
         )}
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="card">
           <div className="text-sm text-gray-600 mb-1">Activities</div>
@@ -174,9 +166,7 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
         </div>
       </div>
 
-      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Activities Section */}
         <div className="lg:col-span-2">
           <div className="card">
             <div className="flex items-center justify-between mb-4">
@@ -274,13 +264,9 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
               </div>
             )}
           </div>
-
-          {/* Expenses removed for planning-only flow */}
         </div>
 
-        {/* Sidebar */}
         <div className="lg:col-span-1">
-          {/* Participants Section */}
           <div className="card">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
               Participants
@@ -325,27 +311,27 @@ export default async function JourneyDetailPage({ params }: JourneyDetailPagePro
               </div>
             )}
 
-            {/* Invite participant modal/button */}
             <InviteParticipant journeyId={id} />
           </div>
 
-          {/* Quick Actions */}
-          <div className="card mt-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Quick Actions
-            </h2>
-            <div className="space-y-2">
-              <Link
-                href={`/journeys/${id}/edit`}
-                className="block w-full btn-secondary text-sm text-center"
-              >
-                Edit Journey
-              </Link>
-              <button className="w-full btn-secondary text-sm text-red-600 hover:bg-red-50">
-                Delete Journey
-              </button>
+          {isOwner && (
+            <div className="card mt-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Quick Actions
+              </h2>
+              <div className="space-y-2">
+                <Link
+                  href={`/journeys/${id}/edit`}
+                  className="block w-full btn-secondary text-sm text-center"
+                >
+                  Edit Journey
+                </Link>
+                <button className="w-full btn-secondary text-sm text-red-600 hover:bg-red-50">
+                  Delete Journey
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
