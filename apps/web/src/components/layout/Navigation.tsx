@@ -84,6 +84,13 @@ export default function Navigation({ user }: NavigationProps) {
               <span className="text-xs font-medium">{item.label}</span>
             </Link>
           ))}
+          <button
+            onClick={handleSignOut}
+            className="flex flex-col items-center justify-center p-3 rounded-lg transition-colors text-gray-600 hover:bg-gray-100 active:bg-gray-200"
+          >
+            <span className="text-2xl mb-1">👋</span>
+            <span className="text-xs font-medium">Sign Out</span>
+          </button>
         </div>
       </div>
     </>

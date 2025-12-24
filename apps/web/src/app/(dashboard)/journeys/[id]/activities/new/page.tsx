@@ -64,7 +64,7 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
         title: formData.title,
         description: formData.description || null,
         location: formData.location || null,
-        scheduled_at: formData.scheduledAt || null,
+        scheduled_at: formData.scheduledAt ? new Date(formData.scheduledAt).toISOString() : null,
         category: formData.category,
         estimated_cost: formData.estimatedCost ? parseFloat(formData.estimatedCost) : null,
         notes: formData.notes || null,

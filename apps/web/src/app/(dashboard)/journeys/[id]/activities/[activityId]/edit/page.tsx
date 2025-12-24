@@ -55,13 +55,24 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
     }
 
     // Convert activity data to form format
+    // For datetime-local input, we need to format as YYYY-MM-DDTHH:mm in local timezone
+    let scheduledAtLocal = '';
+    if (data.scheduled_at) {
+      const date = new Date(data.scheduled_at);
+      // Get local datetime string in the format YYYY-MM-DDTHH:mm
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      scheduledAtLocal = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
     setFormData({
       title: data.title,
       description: data.description || '',
       location: data.location || '',
-      scheduledAt: data.scheduled_at
-        ? new Date(data.scheduled_at).toISOString().slice(0, 16)
-        : '',
+      scheduledAt: scheduledAtLocal,
       category: data.category || 'other',
       estimatedCost: data.estimated_cost?.toString() || '',
       notes: data.notes || '',
@@ -89,7 +100,7 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
         title: formData.title,
         description: formData.description || null,
         location: formData.location || null,
-        scheduled_at: formData.scheduledAt || null,
+        scheduled_at: formData.scheduledAt ? new Date(formData.scheduledAt).toISOString() : null,
         category: formData.category,
         estimated_cost: formData.estimatedCost ? parseFloat(formData.estimatedCost) : null,
         notes: formData.notes || null,

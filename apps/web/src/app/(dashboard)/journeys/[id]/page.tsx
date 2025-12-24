@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server';
 import type { Profile } from '@/types';
 import DeleteJourneyButton from '@/components/features/DeleteJourneyButton';
 
+export const dynamic = 'force-dynamic';
+
 interface JourneyDetailPageProps {
   params: Promise<{
     id: string;
@@ -59,7 +61,7 @@ export default async function JourneyDetailPage({
 
   const isOwner = journey.user_id === user.id;
   const completedActivities =
-    activities?.filter((a) => a.completed).length || 0;
+    activities?.filter((a) => a.completed_at).length || 0;
 
   const startDate = new Date(journey.start_date);
   const endDate = new Date(journey.end_date);
@@ -220,7 +222,7 @@ export default async function JourneyDetailPage({
                               </p>
                             )}
                         </div>
-                        {activity.completed && (
+                        {activity.completed_at && (
                           <span className="text-green-600 text-sm">✓</span>
                         )}
                       </div>

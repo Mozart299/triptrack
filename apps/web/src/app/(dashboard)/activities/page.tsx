@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import ActivityCheckIn from '@/components/features/ActivityCheckIn';
 import ActivityActions from '@/components/features/ActivityActions';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ActivitiesPage() {
   const supabase = await createClient();
 
