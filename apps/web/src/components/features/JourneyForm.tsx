@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { CURRENCIES } from '@/lib/currency';
 
 interface JourneyFormData {
   title: string;
@@ -11,6 +12,7 @@ interface JourneyFormData {
   destination: string;
   start_date: string;
   end_date: string;
+  currency: string;
 }
 
 interface JourneyFormProps {
@@ -27,12 +29,12 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
     title: initialData?.title || '',
     description: initialData?.description || '',
     destination: initialData?.destination || '',
-
-    start_date: initialData?.start_date 
-      ? new Date(initialData.start_date).toISOString().split('T')[0] 
+    currency: (initialData as any)?.currency || 'USD',
+    start_date: initialData?.start_date
+      ? new Date(initialData.start_date).toISOString().split('T')[0]
       : '',
-    end_date: initialData?.end_date 
-      ? new Date(initialData.end_date).toISOString().split('T')[0] 
+    end_date: initialData?.end_date
+      ? new Date(initialData.end_date).toISOString().split('T')[0]
       : '',
   });
 
@@ -63,6 +65,7 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
             destination: formData.destination,
             start_date: formData.start_date,
             end_date: formData.end_date,
+            currency: formData.currency,
           })
           .eq('id', journeyId);
 
@@ -80,6 +83,7 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
             destination: formData.destination,
             start_date: formData.start_date,
             end_date: formData.end_date,
+            currency: formData.currency,
             status: 'planning',
           })
           .select()
@@ -108,7 +112,7 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -185,6 +189,26 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
             required
           />
         </div>
+      </div>
+
+      <div>
+        <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-2">
+          Currency *
+        </label>
+        <select
+          id="currency"
+          name="currency"
+          value={formData.currency}
+          onChange={handleChange}
+          className="input-field"
+          required
+        >
+          {CURRENCIES.map((currency) => (
+            <option key={currency.code} value={currency.code}>
+              {currency.symbol} - {currency.name} ({currency.code})
+            </option>
+          ))}
+        </select>
       </div>
 
       <div>

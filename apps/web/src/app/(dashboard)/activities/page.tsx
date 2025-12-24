@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import ActivityCheckIn from '@/components/features/ActivityCheckIn';
 import ActivityActions from '@/components/features/ActivityActions';
+import { formatCurrency } from '@/lib/currency';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,10 +97,10 @@ export default async function ActivitiesPage() {
         </div>
         <div className="card text-center">
           <p className="text-2xl font-bold text-gray-900">
-            {(() => {
-              const total = activities?.reduce((sum, a) => sum + (a.estimated_cost || 0), 0) || 0;
-              return `$${total.toFixed(2)}`;
-            })()}
+            {formatCurrency(
+              activities?.reduce((sum, a) => sum + (a.estimated_cost || 0), 0) || 0,
+              journey.currency
+            )}
           </p>
           <p className="text-sm text-gray-600">Estimated Budget</p>
         </div>
@@ -112,7 +113,7 @@ export default async function ActivitiesPage() {
           </h2>
           <div className="space-y-3">
             {ongoing.map((activity) => (
-              <ActivityCheckIn key={activity.id} activity={activity} />
+              <ActivityCheckIn key={activity.id} activity={activity} currency={journey.currency} />
             ))}
           </div>
         </div>
@@ -155,7 +156,7 @@ export default async function ActivitiesPage() {
                       </p>
                     )}
                     {activity.estimated_cost !== undefined && activity.estimated_cost !== null && (
-                      <p className="text-sm text-gray-700 mt-2">💵 Estimated: ${activity.estimated_cost.toFixed(2)}</p>
+                      <p className="text-sm text-gray-700 mt-2">💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}</p>
                     )}
                   </div>
                 </div>
@@ -203,7 +204,7 @@ export default async function ActivitiesPage() {
                       </p>
                     )}
                     {activity.estimated_cost !== undefined && activity.estimated_cost !== null && (
-                      <p className="text-sm text-gray-700 mt-2">💵 Estimated: ${activity.estimated_cost.toFixed(2)}</p>
+                      <p className="text-sm text-gray-700 mt-2">💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}</p>
                     )}
                     {activity.scheduled_at && (
                       <p className="text-xs text-gray-500 mt-1">

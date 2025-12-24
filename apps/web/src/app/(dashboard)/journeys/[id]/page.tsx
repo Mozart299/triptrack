@@ -4,6 +4,7 @@ import InviteParticipant from '@/components/features/InviteParticipant';
 import { createClient } from '@/lib/supabase/server';
 import type { Profile } from '@/types';
 import DeleteJourneyButton from '@/components/features/DeleteJourneyButton';
+import { formatCurrency } from '@/lib/currency';
 
 export const dynamic = 'force-dynamic';
 
@@ -171,10 +172,10 @@ export default async function JourneyDetailPage({
         <div className="card">
           <div className="text-sm text-gray-600 mb-1">Estimated Budget</div>
           <div className="text-2xl font-bold text-gray-900">
-            $
-            {(
-              activities?.reduce((s, a) => s + (a.estimated_cost || 0), 0) || 0
-            ).toFixed(2)}
+            {formatCurrency(
+              activities?.reduce((s, a) => s + (a.estimated_cost || 0), 0) || 0,
+              journey.currency
+            )}
           </div>
         </div>
       </div>
@@ -217,8 +218,7 @@ export default async function JourneyDetailPage({
                           {activity.estimated_cost !== undefined &&
                             activity.estimated_cost !== null && (
                               <p className="text-sm text-gray-700 mt-2">
-                                💵 Estimated: $
-                                {activity.estimated_cost.toFixed(2)}
+                                💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}
                               </p>
                             )}
                         </div>

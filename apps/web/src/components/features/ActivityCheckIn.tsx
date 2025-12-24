@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Activity } from '@/types';
+import { formatCurrency } from '@/lib/currency';
 
 interface ActivityCheckInProps {
   activity: Activity;
+  currency: string;
 }
 
-export default function ActivityCheckIn({ activity }: ActivityCheckInProps) {
+export default function ActivityCheckIn({ activity, currency }: ActivityCheckInProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -52,7 +54,7 @@ export default function ActivityCheckIn({ activity }: ActivityCheckInProps) {
             <p className="text-sm text-gray-700 mb-2">{activity.description}</p>
           )}
           {activity.estimated_cost !== undefined && activity.estimated_cost !== null && (
-            <p className="text-sm text-gray-700 mb-2">💵 Estimated: ${activity.estimated_cost.toFixed(2)}</p>
+            <p className="text-sm text-gray-700 mb-2">💵 Estimated: {formatCurrency(activity.estimated_cost, currency)}</p>
           )}
           {activity.location && (
             <p className="text-xs text-gray-600 font-medium">

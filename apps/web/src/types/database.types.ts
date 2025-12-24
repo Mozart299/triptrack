@@ -22,6 +22,7 @@ export interface Database {
           end_date: string
           status: 'planning' | 'active' | 'completed'
           cover_image_url: string | null
+          currency: string
         }
         Insert: {
           id?: string
@@ -35,6 +36,7 @@ export interface Database {
           end_date: string
           status?: 'planning' | 'active' | 'completed'
           cover_image_url?: string | null
+          currency?: string
         }
         Update: {
           id?: string
@@ -48,6 +50,7 @@ export interface Database {
           end_date?: string
           status?: 'planning' | 'active' | 'completed'
           cover_image_url?: string | null
+          currency?: string
         }
       }
       activities: {

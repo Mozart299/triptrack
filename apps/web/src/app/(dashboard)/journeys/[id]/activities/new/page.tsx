@@ -206,7 +206,7 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
                 htmlFor="estimatedCost"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Estimated Cost (USD)
+                Estimated Cost
               </label>
               <input
                 type="number"

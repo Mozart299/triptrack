@@ -26,7 +26,14 @@ CREATE TABLE IF NOT EXISTS journeys (
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
   status TEXT CHECK (status IN ('planning', 'active', 'completed')) DEFAULT 'planning',
-  cover_image_url TEXT
+  cover_image_url TEXT,
+  currency TEXT NOT NULL DEFAULT 'USD' CHECK (currency IN (
+    'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY',
+    'SEK', 'NZD', 'MXN', 'SGD', 'HKD', 'NOK', 'KRW', 'TRY',
+    'INR', 'RUB', 'BRL', 'ZAR', 'DKK', 'PLN', 'THB', 'IDR',
+    'HUF', 'CZK', 'ILS', 'CLP', 'PHP', 'AED', 'COP', 'SAR',
+    'MYR', 'RON', 'ARS', 'VND', 'KES', 'NGN', 'EGP', 'PKR'
+  ))
 );
 
 -- Journey participants (for shared trips)
