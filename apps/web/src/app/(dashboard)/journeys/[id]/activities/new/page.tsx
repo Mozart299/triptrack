@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Profile, CostSplitType } from '@/types';
 import ParticipantCostInput from '@/components/features/ParticipantCostInput';
+import ParticipantSelector from '@/components/features/ParticipantSelector';
 
 interface NewActivityPageProps {
   params: Promise<{
@@ -39,6 +40,7 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
   });
 
   const [participantCosts, setParticipantCosts] = useState<ParticipantCost[]>([]);
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
 
   // Unwrap params on mount and fetch journey data
   useEffect(() => {
@@ -63,7 +65,16 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
         .rpc('get_journey_participants', { p_journey_id: p.id });
 
       if (participantsData) {
-        setParticipants(participantsData);
+        // Map to Profile format, using user_id as id
+        const mappedParticipants = participantsData.map((p: any) => ({
+          id: p.user_id,
+          email: p.email || '',
+          full_name: p.full_name,
+          avatar_url: p.avatar_url,
+          created_at: '',
+          updated_at: '',
+        }));
+        setParticipants(mappedParticipants);
       }
     });
   }, [params]);
@@ -105,6 +116,7 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
         estimated_cost: formData.estimatedCost ? parseFloat(formData.estimatedCost) : null,
         notes: formData.notes || null,
         cost_split_type: formData.costSplitType,
+        split_participants: formData.costSplitType === 'equal' ? selectedParticipants : [],
       })
       .select()
       .single();
@@ -333,6 +345,16 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
                 </label>
               </div>
             </div>
+
+            {formData.costSplitType === 'equal' && (
+              <ParticipantSelector
+                participants={participants}
+                selectedParticipants={selectedParticipants}
+                onChange={setSelectedParticipants}
+                estimatedCost={formData.estimatedCost ? parseFloat(formData.estimatedCost) : undefined}
+                currency={journeyCurrency}
+              />
+            )}
 
             {formData.costSplitType === 'individual' && (
               <ParticipantCostInput

@@ -63,7 +63,8 @@ CREATE TABLE IF NOT EXISTS activities (
   notes TEXT,
   estimated_cost NUMERIC(10, 2),
   cost_split_type TEXT CHECK (cost_split_type IN ('equal', 'individual', 'none')) DEFAULT 'none',
-  cost_paid BOOLEAN DEFAULT false
+  cost_paid BOOLEAN DEFAULT false,
+  split_participants UUID[] DEFAULT '{}'
 );
 
 -- Add estimated_cost column if upgrading an existing database
@@ -77,6 +78,10 @@ ALTER TABLE IF EXISTS activities
 -- Add cost_paid column if upgrading an existing database
 ALTER TABLE IF EXISTS activities
   ADD COLUMN IF NOT EXISTS cost_paid BOOLEAN DEFAULT false;
+
+-- Add split_participants column if upgrading an existing database
+ALTER TABLE IF EXISTS activities
+  ADD COLUMN IF NOT EXISTS split_participants UUID[] DEFAULT '{}';
 
 -- Expenses table
 CREATE TABLE IF NOT EXISTS expenses (
@@ -482,6 +487,7 @@ RETURNS TABLE(
   role TEXT,
   joined_at TIMESTAMP WITH TIME ZONE,
   full_name TEXT,
+  email TEXT,
   avatar_url TEXT
 )
 LANGUAGE sql
@@ -496,6 +502,7 @@ AS $$
     jp.role,
     jp.joined_at,
     p.full_name,
+    p.email,
     p.avatar_url
   FROM public.journey_participants jp
   JOIN public.profiles p ON p.id = jp.user_id

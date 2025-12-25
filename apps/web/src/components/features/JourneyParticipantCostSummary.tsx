@@ -63,11 +63,16 @@ export default function JourneyParticipantCostSummary({
         }
 
         if (activity.cost_split_type === 'equal') {
-          // Divide equally among all participants
-          const perPerson = activity.estimated_cost / participants.length;
-          participants.forEach((p) => {
-            totals[p.id] = (totals[p.id] || 0) + perPerson;
-          });
+          // Divide equally among selected participants
+          const selectedParticipants = activity.split_participants || [];
+          if (selectedParticipants.length > 0) {
+            const perPerson = activity.estimated_cost / selectedParticipants.length;
+            selectedParticipants.forEach((userId) => {
+              if (totals[userId] !== undefined) {
+                totals[userId] = (totals[userId] || 0) + perPerson;
+              }
+            });
+          }
         } else if (activity.cost_split_type === 'individual' && participantCosts) {
           // Use individual costs
           const activityCosts = participantCosts.filter(

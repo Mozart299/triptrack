@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Profile, CostSplitType } from '@/types';
 import ParticipantCostInput from '@/components/features/ParticipantCostInput';
+import ParticipantSelector from '@/components/features/ParticipantSelector';
 
 interface EditActivityPageProps {
   params: Promise<{
@@ -43,6 +44,7 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
   });
 
   const [participantCosts, setParticipantCosts] = useState<ParticipantCost[]>([]);
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
 
   // Unwrap params and load activity
   useEffect(() => {
@@ -68,7 +70,16 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
         .rpc('get_journey_participants', { p_journey_id: p.id });
 
       if (participantsData) {
-        setParticipants(participantsData);
+        // Map to Profile format, using user_id as id
+        const mappedParticipants = participantsData.map((p: any) => ({
+          id: p.user_id,
+          email: p.email || '',
+          full_name: p.full_name,
+          avatar_url: p.avatar_url,
+          created_at: '',
+          updated_at: '',
+        }));
+        setParticipants(mappedParticipants);
       }
 
       loadActivity(p.activityId);
@@ -131,6 +142,12 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
       notes: data.notes || '',
       costSplitType: data.cost_split_type || 'none',
     });
+
+    // Load split participants if equal split
+    if (data.cost_split_type === 'equal' && data.split_participants) {
+      setSelectedParticipants(data.split_participants);
+    }
+
     setLoadingActivity(false);
   };
 
@@ -159,6 +176,7 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
         estimated_cost: formData.estimatedCost ? parseFloat(formData.estimatedCost) : null,
         notes: formData.notes || null,
         cost_split_type: formData.costSplitType,
+        split_participants: formData.costSplitType === 'equal' ? selectedParticipants : [],
       })
       .eq('id', activityId);
 
@@ -439,6 +457,16 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
                 </label>
               </div>
             </div>
+
+            {formData.costSplitType === 'equal' && (
+              <ParticipantSelector
+                participants={participants}
+                selectedParticipants={selectedParticipants}
+                onChange={setSelectedParticipants}
+                estimatedCost={formData.estimatedCost ? parseFloat(formData.estimatedCost) : undefined}
+                currency={journeyCurrency}
+              />
+            )}
 
             {formData.costSplitType === 'individual' && (
               <ParticipantCostInput
