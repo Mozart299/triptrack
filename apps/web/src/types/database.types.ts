@@ -68,6 +68,7 @@ export interface Database {
           category: 'transport' | 'accommodation' | 'dining' | 'sightseeing' | 'entertainment' | 'other'
           notes: string | null
           estimated_cost: number | null
+          cost_split_type: 'equal' | 'individual' | 'none'
         }
         Insert: {
           id?: string
@@ -83,6 +84,7 @@ export interface Database {
           category?: 'transport' | 'accommodation' | 'dining' | 'sightseeing' | 'entertainment' | 'other'
           notes?: string | null
           estimated_cost?: number | null
+          cost_split_type?: 'equal' | 'individual' | 'none'
         }
         Update: {
           id?: string
@@ -98,6 +100,7 @@ export interface Database {
           category?: 'transport' | 'accommodation' | 'dining' | 'sightseeing' | 'entertainment' | 'other'
           notes?: string | null
           estimated_cost?: number | null
+          cost_split_type?: 'equal' | 'individual' | 'none'
         }
       }
       expenses: {
@@ -200,6 +203,35 @@ export interface Database {
           email?: string
           full_name?: string | null
           avatar_url?: string | null
+        }
+      }
+      activity_participant_costs: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          activity_id: string
+          user_id: string
+          amount: number
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          activity_id: string
+          user_id: string
+          amount: number
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          activity_id?: string
+          user_id?: string
+          amount?: number
+          notes?: string | null
         }
       }
     }

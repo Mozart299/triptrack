@@ -4,12 +4,20 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { Profile, CostSplitType } from '@/types';
+import ParticipantCostInput from '@/components/features/ParticipantCostInput';
 
 interface EditActivityPageProps {
   params: Promise<{
     id: string;
     activityId: string;
   }>;
+}
+
+interface ParticipantCost {
+  userId: string;
+  amount: number;
+  notes?: string;
 }
 
 export default function EditActivityPage({ params }: EditActivityPageProps) {
@@ -20,6 +28,8 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
   const [journeyId, setJourneyId] = useState<string | null>(null);
   const [activityId, setActivityId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [participants, setParticipants] = useState<Profile[]>([]);
+  const [journeyCurrency, setJourneyCurrency] = useState<string>('USD');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -29,13 +39,38 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
     category: 'other' as 'transport' | 'accommodation' | 'dining' | 'sightseeing' | 'entertainment' | 'other',
     estimatedCost: '',
     notes: '',
+    costSplitType: 'none' as CostSplitType,
   });
+
+  const [participantCosts, setParticipantCosts] = useState<ParticipantCost[]>([]);
 
   // Unwrap params and load activity
   useEffect(() => {
-    params.then((p) => {
+    params.then(async (p) => {
       setJourneyId(p.id);
       setActivityId(p.activityId);
+
+      const supabase = createClient();
+
+      // Fetch journey to get currency
+      const { data: journey } = await supabase
+        .from('journeys')
+        .select('currency')
+        .eq('id', p.id)
+        .single();
+
+      if (journey) {
+        setJourneyCurrency(journey.currency);
+      }
+
+      // Fetch participants
+      const { data: participantsData } = await supabase
+        .rpc('get_journey_participants', { p_journey_id: p.id });
+
+      if (participantsData) {
+        setParticipants(participantsData);
+      }
+
       loadActivity(p.activityId);
     });
   }, [params]);
@@ -52,6 +87,24 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
       setError('Activity not found');
       setLoadingActivity(false);
       return;
+    }
+
+    // Load participant costs if cost_split_type is 'individual'
+    if (data.cost_split_type === 'individual') {
+      const { data: costsData } = await supabase
+        .from('activity_participant_costs')
+        .select('*')
+        .eq('activity_id', actId);
+
+      if (costsData) {
+        setParticipantCosts(
+          costsData.map((cost) => ({
+            userId: cost.user_id,
+            amount: cost.amount,
+            notes: cost.notes || undefined,
+          }))
+        );
+      }
     }
 
     // Convert activity data to form format
@@ -76,6 +129,7 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
       category: data.category || 'other',
       estimatedCost: data.estimated_cost?.toString() || '',
       notes: data.notes || '',
+      costSplitType: data.cost_split_type || 'none',
     });
     setLoadingActivity(false);
   };
@@ -104,6 +158,7 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
         category: formData.category,
         estimated_cost: formData.estimatedCost ? parseFloat(formData.estimatedCost) : null,
         notes: formData.notes || null,
+        cost_split_type: formData.costSplitType,
       })
       .eq('id', activityId);
 
@@ -111,6 +166,43 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
       setError(activityError.message);
       setLoading(false);
       return;
+    }
+
+    // Handle participant costs
+    if (formData.costSplitType === 'individual') {
+      // Delete existing costs
+      await supabase
+        .from('activity_participant_costs')
+        .delete()
+        .eq('activity_id', activityId);
+
+      // Insert new costs
+      const costsToInsert = participantCosts
+        .filter((cost) => cost.amount > 0)
+        .map((cost) => ({
+          activity_id: activityId,
+          user_id: cost.userId,
+          amount: cost.amount,
+          notes: cost.notes || null,
+        }));
+
+      if (costsToInsert.length > 0) {
+        const { error: costsError } = await supabase
+          .from('activity_participant_costs')
+          .insert(costsToInsert);
+
+        if (costsError) {
+          setError(`Activity updated but failed to save participant costs: ${costsError.message}`);
+          setLoading(false);
+          return;
+        }
+      }
+    } else {
+      // If not individual, delete any existing participant costs
+      await supabase
+        .from('activity_participant_costs')
+        .delete()
+        .eq('activity_id', activityId);
     }
 
     // Redirect to journey page
@@ -297,6 +389,65 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
                 min="0"
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Cost Split Type
+              </label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input
+                    type="radio"
+                    name="costSplitType"
+                    value="none"
+                    checked={formData.costSplitType === 'none'}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                  />
+                  <div>
+                    <div className="font-medium text-gray-900">No Split</div>
+                    <div className="text-sm text-gray-600">Single person or untracked cost</div>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input
+                    type="radio"
+                    name="costSplitType"
+                    value="equal"
+                    checked={formData.costSplitType === 'equal'}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                  />
+                  <div>
+                    <div className="font-medium text-gray-900">Split Equally</div>
+                    <div className="text-sm text-gray-600">Divide cost evenly among all participants</div>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input
+                    type="radio"
+                    name="costSplitType"
+                    value="individual"
+                    checked={formData.costSplitType === 'individual'}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                  />
+                  <div>
+                    <div className="font-medium text-gray-900">Individual Costs</div>
+                    <div className="text-sm text-gray-600">Set different costs for each participant</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {formData.costSplitType === 'individual' && (
+              <ParticipantCostInput
+                participants={participants}
+                costs={participantCosts}
+                onChange={setParticipantCosts}
+                currency={journeyCurrency}
+              />
+            )}
 
             <div>
               <label

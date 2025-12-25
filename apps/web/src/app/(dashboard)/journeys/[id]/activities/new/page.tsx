@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { Profile, CostSplitType } from '@/types';
+import ParticipantCostInput from '@/components/features/ParticipantCostInput';
 
 interface NewActivityPageProps {
   params: Promise<{
@@ -11,11 +13,19 @@ interface NewActivityPageProps {
   }>;
 }
 
+interface ParticipantCost {
+  userId: string;
+  amount: number;
+  notes?: string;
+}
+
 export default function NewActivityPage({ params }: NewActivityPageProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [journeyId, setJourneyId] = useState<string | null>(null);
+  const [participants, setParticipants] = useState<Profile[]>([]);
+  const [journeyCurrency, setJourneyCurrency] = useState<string>('USD');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -25,11 +35,37 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
     category: 'other' as 'transport' | 'accommodation' | 'dining' | 'sightseeing' | 'entertainment' | 'other',
     estimatedCost: '',
     notes: '',
+    costSplitType: 'none' as CostSplitType,
   });
 
-  // Unwrap params on mount
+  const [participantCosts, setParticipantCosts] = useState<ParticipantCost[]>([]);
+
+  // Unwrap params on mount and fetch journey data
   useEffect(() => {
-    params.then((p) => setJourneyId(p.id));
+    params.then(async (p) => {
+      setJourneyId(p.id);
+
+      const supabase = createClient();
+
+      // Fetch journey to get currency
+      const { data: journey } = await supabase
+        .from('journeys')
+        .select('currency')
+        .eq('id', p.id)
+        .single();
+
+      if (journey) {
+        setJourneyCurrency(journey.currency);
+      }
+
+      // Fetch participants
+      const { data: participantsData } = await supabase
+        .rpc('get_journey_participants', { p_journey_id: p.id });
+
+      if (participantsData) {
+        setParticipants(participantsData);
+      }
+    });
   }, [params]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,7 +92,7 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
     }
 
     // Create activity
-    const { error: activityError } = await supabase
+    const { data: activity, error: activityError } = await supabase
       .from('activities')
       .insert({
         journey_id: journeyId,
@@ -68,12 +104,39 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
         category: formData.category,
         estimated_cost: formData.estimatedCost ? parseFloat(formData.estimatedCost) : null,
         notes: formData.notes || null,
-      });
+        cost_split_type: formData.costSplitType,
+      })
+      .select()
+      .single();
 
     if (activityError) {
       setError(activityError.message);
       setLoading(false);
       return;
+    }
+
+    // If individual cost split, save participant costs
+    if (formData.costSplitType === 'individual' && activity && participantCosts.length > 0) {
+      const costsToInsert = participantCosts
+        .filter((cost) => cost.amount > 0)
+        .map((cost) => ({
+          activity_id: activity.id,
+          user_id: cost.userId,
+          amount: cost.amount,
+          notes: cost.notes || null,
+        }));
+
+      if (costsToInsert.length > 0) {
+        const { error: costsError } = await supabase
+          .from('activity_participant_costs')
+          .insert(costsToInsert);
+
+        if (costsError) {
+          setError(`Activity created but failed to save participant costs: ${costsError.message}`);
+          setLoading(false);
+          return;
+        }
+      }
     }
 
     // Redirect to journey page
@@ -220,6 +283,65 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
                 min="0"
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Cost Split Type
+              </label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input
+                    type="radio"
+                    name="costSplitType"
+                    value="none"
+                    checked={formData.costSplitType === 'none'}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                  />
+                  <div>
+                    <div className="font-medium text-gray-900">No Split</div>
+                    <div className="text-sm text-gray-600">Single person or untracked cost</div>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input
+                    type="radio"
+                    name="costSplitType"
+                    value="equal"
+                    checked={formData.costSplitType === 'equal'}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                  />
+                  <div>
+                    <div className="font-medium text-gray-900">Split Equally</div>
+                    <div className="text-sm text-gray-600">Divide cost evenly among all participants</div>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input
+                    type="radio"
+                    name="costSplitType"
+                    value="individual"
+                    checked={formData.costSplitType === 'individual'}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                  />
+                  <div>
+                    <div className="font-medium text-gray-900">Individual Costs</div>
+                    <div className="text-sm text-gray-600">Set different costs for each participant</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {formData.costSplitType === 'individual' && (
+              <ParticipantCostInput
+                participants={participants}
+                costs={participantCosts}
+                onChange={setParticipantCosts}
+                currency={journeyCurrency}
+              />
+            )}
 
             <div>
               <label

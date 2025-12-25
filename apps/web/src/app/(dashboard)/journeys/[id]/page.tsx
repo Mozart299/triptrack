@@ -4,6 +4,8 @@ import InviteParticipant from '@/components/features/InviteParticipant';
 import { createClient } from '@/lib/supabase/server';
 import type { Profile } from '@/types';
 import DeleteJourneyButton from '@/components/features/DeleteJourneyButton';
+import ActivityCostBreakdown from '@/components/features/ActivityCostBreakdown';
+import JourneyParticipantCostSummary from '@/components/features/JourneyParticipantCostSummary';
 import { formatCurrency } from '@/lib/currency';
 
 export const dynamic = 'force-dynamic';
@@ -217,9 +219,18 @@ export default async function JourneyDetailPage({
                           )}
                           {activity.estimated_cost !== undefined &&
                             activity.estimated_cost !== null && (
-                              <p className="text-sm text-gray-700 mt-2">
-                                💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}
-                              </p>
+                              <div className="text-sm text-gray-700 mt-2">
+                                <p>💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}</p>
+                                {activity.cost_split_type === 'equal' && (
+                                  <p className="text-xs text-gray-600 mt-1">Split equally among participants</p>
+                                )}
+                                {activity.cost_split_type === 'individual' && (
+                                  <div className="mt-2 bg-gray-50 p-2 rounded border border-gray-200">
+                                    <p className="text-xs text-gray-600 font-medium mb-1">Individual costs:</p>
+                                    <ActivityCostBreakdown activityId={activity.id} currency={journey.currency} />
+                                  </div>
+                                )}
+                              </div>
                             )}
                         </div>
                         {activity.completed_at && (
@@ -291,37 +302,46 @@ export default async function JourneyDetailPage({
             </h2>
 
             {participants && participants.length > 0 ? (
-              <div className="space-y-3">
-                {participants.map((participant) => {
-                  const profile = participant.profiles as unknown as Profile;
+              <>
+                <div className="space-y-3 mb-6">
+                  {participants.map((participant) => {
+                    const profile = participant.profiles as unknown as Profile;
 
-                  return (
-                    <div
-                      key={participant.id}
-                      className="flex items-center gap-3"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold">
-                        {profile?.full_name?.[0]?.toUpperCase() ||
-                          profile?.email?.[0]?.toUpperCase() ||
-                          '?'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 truncate">
-                          {profile?.full_name || 'Unknown'}
+                    return (
+                      <div
+                        key={participant.id}
+                        className="flex items-center gap-3"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold">
+                          {profile?.full_name?.[0]?.toUpperCase() ||
+                            profile?.email?.[0]?.toUpperCase() ||
+                            '?'}
                         </div>
-                        <div className="text-xs text-gray-500 truncate">
-                          {profile?.email}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 truncate">
+                            {profile?.full_name || 'Unknown'}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {profile?.email}
+                          </div>
                         </div>
+                        {participant.role === 'owner' && (
+                          <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded">
+                            Owner
+                          </span>
+                        )}
                       </div>
-                      {participant.role === 'owner' && (
-                        <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded">
-                          Owner
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+                <div className="pt-4 border-t border-gray-200">
+                  <JourneyParticipantCostSummary
+                    journeyId={id}
+                    participants={participants.map((p) => p.profiles as unknown as Profile)}
+                    currency={journey.currency}
+                  />
+                </div>
+              </>
             ) : (
               <div className="text-center py-4">
                 <p className="text-gray-600 text-sm">

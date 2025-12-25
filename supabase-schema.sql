@@ -61,12 +61,17 @@ CREATE TABLE IF NOT EXISTS activities (
   completed_at TIMESTAMP WITH TIME ZONE,
   category TEXT CHECK (category IN ('transport', 'accommodation', 'dining', 'sightseeing', 'entertainment', 'other')) DEFAULT 'other',
   notes TEXT,
-  estimated_cost NUMERIC(10, 2)
+  estimated_cost NUMERIC(10, 2),
+  cost_split_type TEXT CHECK (cost_split_type IN ('equal', 'individual', 'none')) DEFAULT 'none'
 );
 
 -- Add estimated_cost column if upgrading an existing database
 ALTER TABLE IF EXISTS activities
   ADD COLUMN IF NOT EXISTS estimated_cost NUMERIC(10,2);
+
+-- Add cost_split_type column if upgrading an existing database
+ALTER TABLE IF EXISTS activities
+  ADD COLUMN IF NOT EXISTS cost_split_type TEXT CHECK (cost_split_type IN ('equal', 'individual', 'none')) DEFAULT 'none';
 
 -- Expenses table
 CREATE TABLE IF NOT EXISTS expenses (
@@ -86,6 +91,18 @@ CREATE TABLE IF NOT EXISTS expenses (
   receipt_url TEXT
 );
 
+-- Activity participant costs (for individual cost splitting)
+CREATE TABLE IF NOT EXISTS activity_participant_costs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  activity_id UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  amount NUMERIC(10, 2) NOT NULL,
+  notes TEXT,
+  UNIQUE(activity_id, user_id)
+);
+
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_journeys_user_id ON journeys(user_id);
 CREATE INDEX IF NOT EXISTS idx_journeys_status ON journeys(status);
@@ -98,6 +115,8 @@ CREATE INDEX IF NOT EXISTS idx_activities_scheduled_at ON activities(scheduled_a
 CREATE INDEX IF NOT EXISTS idx_expenses_journey_id ON expenses(journey_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_user_id ON expenses(user_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_paid_by ON expenses(paid_by);
+CREATE INDEX IF NOT EXISTS idx_activity_participant_costs_activity_id ON activity_participant_costs(activity_id);
+CREATE INDEX IF NOT EXISTS idx_activity_participant_costs_user_id ON activity_participant_costs(user_id);
 
 -- Row Level Security (RLS) Policies
 
@@ -107,6 +126,7 @@ ALTER TABLE journeys ENABLE ROW LEVEL SECURITY;
 ALTER TABLE journey_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE activity_participant_costs ENABLE ROW LEVEL SECURITY;
 
 -- Helper to check journey membership (text wrapper).
 -- `auth.uid()` returns text in some contexts, so provide a TEXT-accepting overload
@@ -314,6 +334,63 @@ CREATE POLICY "Users can delete expenses they created"
   ON expenses FOR DELETE
   USING (auth.uid() = user_id);
 
+-- Activity participant costs policies
+DROP POLICY IF EXISTS "Users can view activity costs in their journeys" ON activity_participant_costs;
+CREATE POLICY "Users can view activity costs in their journeys"
+  ON activity_participant_costs FOR SELECT
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM journey_participants
+      WHERE journey_id = (SELECT journey_id FROM activities WHERE id = activity_participant_costs.activity_id)
+    )
+    OR auth.uid() IN (
+      SELECT user_id FROM journeys
+      WHERE id = (SELECT journey_id FROM activities WHERE id = activity_participant_costs.activity_id)
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can create activity costs in their journeys" ON activity_participant_costs;
+CREATE POLICY "Users can create activity costs in their journeys"
+  ON activity_participant_costs FOR INSERT
+  WITH CHECK (
+    auth.uid() IN (
+      SELECT user_id FROM journey_participants
+      WHERE journey_id = (SELECT journey_id FROM activities WHERE id = activity_id)
+    )
+    OR auth.uid() IN (
+      SELECT user_id FROM journeys
+      WHERE id = (SELECT journey_id FROM activities WHERE id = activity_id)
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can update activity costs in their journeys" ON activity_participant_costs;
+CREATE POLICY "Users can update activity costs in their journeys"
+  ON activity_participant_costs FOR UPDATE
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM journey_participants
+      WHERE journey_id = (SELECT journey_id FROM activities WHERE id = activity_participant_costs.activity_id)
+    )
+    OR auth.uid() IN (
+      SELECT user_id FROM journeys
+      WHERE id = (SELECT journey_id FROM activities WHERE id = activity_participant_costs.activity_id)
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can delete activity costs in their journeys" ON activity_participant_costs;
+CREATE POLICY "Users can delete activity costs in their journeys"
+  ON activity_participant_costs FOR DELETE
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM journey_participants
+      WHERE journey_id = (SELECT journey_id FROM activities WHERE id = activity_participant_costs.activity_id)
+    )
+    OR auth.uid() IN (
+      SELECT user_id FROM journeys
+      WHERE id = (SELECT journey_id FROM activities WHERE id = activity_participant_costs.activity_id)
+    )
+  );
+
 -- Function to automatically update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -345,6 +422,12 @@ CREATE TRIGGER update_activities_updated_at
 DROP TRIGGER IF EXISTS update_expenses_updated_at ON expenses;
 CREATE TRIGGER update_expenses_updated_at
   BEFORE UPDATE ON expenses
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_activity_participant_costs_updated_at ON activity_participant_costs;
+CREATE TRIGGER update_activity_participant_costs_updated_at
+  BEFORE UPDATE ON activity_participant_costs
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 

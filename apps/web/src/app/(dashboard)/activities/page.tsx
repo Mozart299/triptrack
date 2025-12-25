@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import ActivityCheckIn from '@/components/features/ActivityCheckIn';
 import ActivityActions from '@/components/features/ActivityActions';
+import ActivityCostBreakdown from '@/components/features/ActivityCostBreakdown';
 import { formatCurrency } from '@/lib/currency';
 
 export const dynamic = 'force-dynamic';
@@ -156,7 +157,18 @@ export default async function ActivitiesPage() {
                       </p>
                     )}
                     {activity.estimated_cost !== undefined && activity.estimated_cost !== null && (
-                      <p className="text-sm text-gray-700 mt-2">💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}</p>
+                      <div className="text-sm text-gray-700 mt-2">
+                        <p>💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}</p>
+                        {activity.cost_split_type === 'equal' && (
+                          <p className="text-xs text-gray-600 mt-1">Split equally among participants</p>
+                        )}
+                        {activity.cost_split_type === 'individual' && (
+                          <div className="mt-2 bg-gray-50 p-2 rounded border border-gray-200">
+                            <p className="text-xs text-gray-600 font-medium mb-1">Individual costs:</p>
+                            <ActivityCostBreakdown activityId={activity.id} currency={journey.currency} />
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -204,7 +216,18 @@ export default async function ActivitiesPage() {
                       </p>
                     )}
                     {activity.estimated_cost !== undefined && activity.estimated_cost !== null && (
-                      <p className="text-sm text-gray-700 mt-2">💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}</p>
+                      <div className="text-sm text-gray-700 mt-2">
+                        <p>💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}</p>
+                        {activity.cost_split_type === 'equal' && (
+                          <p className="text-xs text-gray-600 mt-1">Split equally among participants</p>
+                        )}
+                        {activity.cost_split_type === 'individual' && (
+                          <div className="mt-2 bg-gray-50 p-2 rounded border border-gray-200">
+                            <p className="text-xs text-gray-600 font-medium mb-1">Individual costs:</p>
+                            <ActivityCostBreakdown activityId={activity.id} currency={journey.currency} />
+                          </div>
+                        )}
+                      </div>
                     )}
                     {activity.scheduled_at && (
                       <p className="text-xs text-gray-500 mt-1">

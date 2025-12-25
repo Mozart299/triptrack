@@ -16,6 +16,10 @@ export type ExpenseUpdate = Database['public']['Tables']['expenses']['Update'];
 export type JourneyParticipant = Database['public']['Tables']['journey_participants']['Row'];
 export type Profile = Database['public']['Tables']['profiles']['Row'];
 
+export type ActivityParticipantCost = Database['public']['Tables']['activity_participant_costs']['Row'];
+export type ActivityParticipantCostInsert = Database['public']['Tables']['activity_participant_costs']['Insert'];
+export type ActivityParticipantCostUpdate = Database['public']['Tables']['activity_participant_costs']['Update'];
+
 // Application-specific types
 export interface JourneyWithParticipants extends Journey {
   participants: Profile[];
@@ -26,6 +30,15 @@ export interface ActivityWithExpenses extends Omit<Activity, 'estimated_cost'> {
   expenses: Expense[];
   total_cost: number;
   estimated_cost: number | null;
+}
+
+export interface ActivityWithCosts extends Activity {
+  participant_costs?: ActivityParticipantCost[];
+}
+
+export interface ParticipantWithCost extends Profile {
+  cost_amount?: number;
+  cost_notes?: string;
 }
 
 export interface JourneyStats {
@@ -52,3 +65,4 @@ export interface ExpenseSummary {
 export type JourneyStatus = 'planning' | 'active' | 'completed';
 export type ActivityCategory = 'transport' | 'accommodation' | 'dining' | 'sightseeing' | 'entertainment' | 'other';
 export type ExpenseCategory = 'transport' | 'accommodation' | 'food' | 'activities' | 'shopping' | 'other';
+export type CostSplitType = 'equal' | 'individual' | 'none';

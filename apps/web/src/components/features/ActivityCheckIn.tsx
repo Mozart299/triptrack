@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Activity } from '@/types';
 import { formatCurrency } from '@/lib/currency';
+import ActivityCostBreakdown from './ActivityCostBreakdown';
 
 interface ActivityCheckInProps {
   activity: Activity;
@@ -54,7 +55,18 @@ export default function ActivityCheckIn({ activity, currency }: ActivityCheckInP
             <p className="text-sm text-gray-700 mb-2">{activity.description}</p>
           )}
           {activity.estimated_cost !== undefined && activity.estimated_cost !== null && (
-            <p className="text-sm text-gray-700 mb-2">💵 Estimated: {formatCurrency(activity.estimated_cost, currency)}</p>
+            <div className="text-sm text-gray-700 mb-2">
+              <p>💵 Estimated: {formatCurrency(activity.estimated_cost, currency)}</p>
+              {activity.cost_split_type === 'equal' && (
+                <p className="text-xs text-gray-600 mt-1">Split equally among participants</p>
+              )}
+              {activity.cost_split_type === 'individual' && (
+                <div className="mt-2 bg-white/50 p-2 rounded border border-gray-200">
+                  <p className="text-xs text-gray-600 font-medium mb-1">Individual costs:</p>
+                  <ActivityCostBreakdown activityId={activity.id} currency={currency} />
+                </div>
+              )}
+            </div>
           )}
           {activity.location && (
             <p className="text-xs text-gray-600 font-medium">
