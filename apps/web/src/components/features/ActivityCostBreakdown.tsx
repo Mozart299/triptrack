@@ -69,24 +69,28 @@ export default function ActivityCostBreakdown({
   const totalCost = costs.reduce((sum, cost) => sum + cost.amount, 0);
 
   return (
-    <div className="mt-2 space-y-1">
+    <div className="mt-2 space-y-2">
       {costs.map((cost) => (
-        <div key={cost.user_id} className="flex items-center justify-between text-xs">
-          <span className="text-gray-700">
-            {cost.full_name || cost.email}
+        <div key={cost.user_id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs">
+          <div className="flex-1 min-w-0">
+            <span className="text-gray-700 font-medium block truncate">
+              {cost.full_name || cost.email}
+            </span>
             {cost.notes && (
-              <span className="text-gray-500 ml-1">({cost.notes})</span>
+              <span className="text-gray-500 block sm:inline sm:ml-1 truncate">
+                ({cost.notes})
+              </span>
             )}
-          </span>
-          <span className="font-medium text-gray-900">
+          </div>
+          <span className="font-medium text-gray-900 sm:shrink-0">
             {formatCurrency(cost.amount, currency)}
           </span>
         </div>
       ))}
       {costs.length > 1 && (
-        <div className="flex items-center justify-between text-xs font-semibold text-gray-900 pt-1 border-t border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs font-semibold text-gray-900 pt-2 border-t border-gray-200">
           <span>Total</span>
-          <span>{formatCurrency(totalCost, currency)}</span>
+          <span className="sm:shrink-0">{formatCurrency(totalCost, currency)}</span>
         </div>
       )}
     </div>

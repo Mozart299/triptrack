@@ -114,29 +114,29 @@ export default function JourneyParticipantCostSummary({
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Cost Per Participant</h3>
+      <h3 className="text-sm sm:text-base font-semibold text-gray-900">Cost Per Participant</h3>
       <div className="space-y-2">
         {participantTotals.map((participant) => (
           <div
             key={participant.userId}
-            className="flex items-center justify-between py-2 border-b border-gray-100"
+            className="flex items-center justify-between py-3 px-2 sm:px-3 border-b border-gray-100 min-h-[44px]"
           >
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 pr-3">
               <p className="text-sm font-medium text-gray-900 truncate">
                 {participant.name}
               </p>
               <p className="text-xs text-gray-500 truncate">{participant.email}</p>
             </div>
-            <div className="text-sm font-semibold text-gray-900 ml-4">
+            <div className="text-sm sm:text-base font-semibold text-gray-900 shrink-0">
               {formatCurrency(participant.total, currency)}
             </div>
           </div>
         ))}
       </div>
       {participantTotals.length > 1 && (
-        <div className="flex items-center justify-between pt-2 border-t-2 border-gray-300">
-          <p className="text-sm font-bold text-gray-900">Total</p>
-          <p className="text-sm font-bold text-primary-700">
+        <div className="flex items-center justify-between pt-3 px-2 sm:px-3 border-t-2 border-gray-300 min-h-[44px]">
+          <p className="text-sm sm:text-base font-bold text-gray-900">Total</p>
+          <p className="text-sm sm:text-base font-bold text-primary-700 shrink-0">
             {formatCurrency(grandTotal, currency)}
           </p>
         </div>

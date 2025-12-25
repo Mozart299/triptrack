@@ -60,7 +60,7 @@ export default function ParticipantCostInput({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
         <label className="block text-sm font-medium text-gray-700">
           Individual Participant Costs
         </label>
@@ -71,22 +71,22 @@ export default function ParticipantCostInput({
         )}
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {participants.map((participant) => {
           const cost = getCost(participant.id);
           return (
             <div
               key={participant.id}
-              className="bg-gray-50 p-3 rounded-lg border border-gray-200"
+              className="bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-200"
             >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
                     {participant.full_name || participant.email}
                   </p>
-                  <p className="text-xs text-gray-500">{participant.email}</p>
+                  <p className="text-xs text-gray-500 truncate">{participant.email}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 sm:shrink-0">
                   <span className="text-sm text-gray-600">{currency}</span>
                   <input
                     type="number"
@@ -97,7 +97,7 @@ export default function ParticipantCostInput({
                       handleAmountChange(participant.id, e.target.value)
                     }
                     placeholder="0.00"
-                    className="input w-24 text-right"
+                    className="input w-full sm:w-28 md:w-32 text-right min-h-[44px]"
                   />
                 </div>
               </div>
@@ -106,7 +106,7 @@ export default function ParticipantCostInput({
                 value={cost?.notes || ''}
                 onChange={(e) => handleNotesChange(participant.id, e.target.value)}
                 placeholder="Notes (optional)"
-                className="input text-sm w-full"
+                className="input text-sm w-full min-h-[44px]"
               />
             </div>
           );

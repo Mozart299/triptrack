@@ -513,17 +513,17 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
               />
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <button
                 type="submit"
                 disabled={loading || deleting}
-                className="flex-1 btn-primary py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 btn-primary py-3 min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Saving...' : 'Save Changes'}
               </button>
               <Link
                 href={`/journeys/${journeyId}`}
-                className="flex-1 btn-secondary py-3 text-center"
+                className="flex-1 btn-secondary py-3 min-h-[44px] text-center flex items-center justify-center"
               >
                 Cancel
               </Link>
@@ -534,7 +534,7 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
                 type="button"
                 onClick={handleDelete}
                 disabled={loading || deleting}
-                className="w-full py-3 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 min-h-[44px] bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {deleting ? 'Deleting...' : 'Delete Activity'}
               </button>
