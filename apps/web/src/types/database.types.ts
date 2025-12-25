@@ -69,6 +69,7 @@ export interface Database {
           notes: string | null
           estimated_cost: number | null
           cost_split_type: 'equal' | 'individual' | 'none'
+          cost_paid: boolean
         }
         Insert: {
           id?: string
@@ -85,6 +86,7 @@ export interface Database {
           notes?: string | null
           estimated_cost?: number | null
           cost_split_type?: 'equal' | 'individual' | 'none'
+          cost_paid?: boolean
         }
         Update: {
           id?: string
@@ -101,6 +103,7 @@ export interface Database {
           notes?: string | null
           estimated_cost?: number | null
           cost_split_type?: 'equal' | 'individual' | 'none'
+          cost_paid?: boolean
         }
       }
       expenses: {

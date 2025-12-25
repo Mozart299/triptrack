@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import ActivityCheckIn from '@/components/features/ActivityCheckIn';
 import ActivityActions from '@/components/features/ActivityActions';
 import ActivityCostBreakdown from '@/components/features/ActivityCostBreakdown';
+import MarkActivityPaid from '@/components/features/MarkActivityPaid';
 import { formatCurrency } from '@/lib/currency';
 
 export const dynamic = 'force-dynamic';
@@ -145,6 +146,11 @@ export default async function ActivitiesPage() {
                       <h3 className="font-semibold text-gray-900">
                         {activity.title}
                       </h3>
+                      {activity.cost_paid && (
+                        <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
+                          Paid
+                        </span>
+                      )}
                     </div>
                     {activity.description && (
                       <p className="text-sm text-gray-600 mb-2">
@@ -158,7 +164,9 @@ export default async function ActivitiesPage() {
                     )}
                     {activity.estimated_cost !== undefined && activity.estimated_cost !== null && (
                       <div className="text-sm text-gray-700 mt-2">
-                        <p>💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}</p>
+                        <p className={activity.cost_paid ? 'line-through opacity-60' : ''}>
+                          💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}
+                        </p>
                         {activity.cost_split_type === 'equal' && (
                           <p className="text-xs text-gray-600 mt-1">Split equally among participants</p>
                         )}
@@ -172,7 +180,15 @@ export default async function ActivitiesPage() {
                     )}
                   </div>
                 </div>
-                <ActivityActions activityId={activity.id} journeyId={journey.id} />
+                <div className="flex gap-2 mt-3">
+                  {activity.estimated_cost && activity.estimated_cost > 0 && (
+                    <MarkActivityPaid
+                      activityId={activity.id}
+                      initialPaidStatus={activity.cost_paid}
+                    />
+                  )}
+                  <ActivityActions activityId={activity.id} journeyId={journey.id} />
+                </div>
               </div>
             ))}
           </div>
@@ -204,6 +220,11 @@ export default async function ActivitiesPage() {
                       <h3 className="font-semibold text-gray-900">
                         {activity.title}
                       </h3>
+                      {activity.cost_paid && (
+                        <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
+                          Paid
+                        </span>
+                      )}
                     </div>
                     {activity.description && (
                       <p className="text-sm text-gray-600 mb-2">
@@ -217,7 +238,9 @@ export default async function ActivitiesPage() {
                     )}
                     {activity.estimated_cost !== undefined && activity.estimated_cost !== null && (
                       <div className="text-sm text-gray-700 mt-2">
-                        <p>💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}</p>
+                        <p className={activity.cost_paid ? 'line-through opacity-60' : ''}>
+                          💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}
+                        </p>
                         {activity.cost_split_type === 'equal' && (
                           <p className="text-xs text-gray-600 mt-1">Split equally among participants</p>
                         )}
@@ -245,7 +268,15 @@ export default async function ActivitiesPage() {
                     )}
                   </div>
                 </div>
-                <ActivityActions activityId={activity.id} journeyId={journey.id} />
+                <div className="flex gap-2 mt-3">
+                  {activity.estimated_cost && activity.estimated_cost > 0 && (
+                    <MarkActivityPaid
+                      activityId={activity.id}
+                      initialPaidStatus={activity.cost_paid}
+                    />
+                  )}
+                  <ActivityActions activityId={activity.id} journeyId={journey.id} />
+                </div>
               </div>
             ))}
           </div>
@@ -271,7 +302,15 @@ export default async function ActivitiesPage() {
                     )}
                   </div>
                 </div>
-                <ActivityActions activityId={activity.id} journeyId={journey.id} />
+                <div className="flex gap-2 mt-3">
+                  {activity.estimated_cost && activity.estimated_cost > 0 && (
+                    <MarkActivityPaid
+                      activityId={activity.id}
+                      initialPaidStatus={activity.cost_paid}
+                    />
+                  )}
+                  <ActivityActions activityId={activity.id} journeyId={journey.id} />
+                </div>
               </div>
             ))}
           </div>

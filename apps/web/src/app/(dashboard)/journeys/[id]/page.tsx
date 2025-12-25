@@ -6,6 +6,7 @@ import type { Profile } from '@/types';
 import DeleteJourneyButton from '@/components/features/DeleteJourneyButton';
 import ActivityCostBreakdown from '@/components/features/ActivityCostBreakdown';
 import JourneyParticipantCostSummary from '@/components/features/JourneyParticipantCostSummary';
+import MarkActivityPaid from '@/components/features/MarkActivityPaid';
 import { formatCurrency } from '@/lib/currency';
 
 export const dynamic = 'force-dynamic';
@@ -209,9 +210,16 @@ export default async function JourneyDetailPage({
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900">
-                            {activity.title}
-                          </h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-gray-900">
+                              {activity.title}
+                            </h3>
+                            {activity.cost_paid && (
+                              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
+                                Paid
+                              </span>
+                            )}
+                          </div>
                           {activity.location && (
                             <p className="text-sm text-gray-600 mt-1">
                               📍 {activity.location}
@@ -220,7 +228,9 @@ export default async function JourneyDetailPage({
                           {activity.estimated_cost !== undefined &&
                             activity.estimated_cost !== null && (
                               <div className="text-sm text-gray-700 mt-2">
-                                <p>💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}</p>
+                                <p className={activity.cost_paid ? 'line-through opacity-60' : ''}>
+                                  💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}
+                                </p>
                                 {activity.cost_split_type === 'equal' && (
                                   <p className="text-xs text-gray-600 mt-1">Split equally among participants</p>
                                 )}
@@ -267,6 +277,12 @@ export default async function JourneyDetailPage({
                       </div>
 
                       <div className="flex gap-2 pt-2 border-t border-gray-100">
+                        {activity.estimated_cost && activity.estimated_cost > 0 && (
+                          <MarkActivityPaid
+                            activityId={activity.id}
+                            initialPaidStatus={activity.cost_paid}
+                          />
+                        )}
                         <Link
                           href={`/journeys/${id}/activities/${activity.id}/edit`}
                           className="flex-1 text-center px-3 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded transition-colors"

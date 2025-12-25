@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS activities (
   category TEXT CHECK (category IN ('transport', 'accommodation', 'dining', 'sightseeing', 'entertainment', 'other')) DEFAULT 'other',
   notes TEXT,
   estimated_cost NUMERIC(10, 2),
-  cost_split_type TEXT CHECK (cost_split_type IN ('equal', 'individual', 'none')) DEFAULT 'none'
+  cost_split_type TEXT CHECK (cost_split_type IN ('equal', 'individual', 'none')) DEFAULT 'none',
+  cost_paid BOOLEAN DEFAULT false
 );
 
 -- Add estimated_cost column if upgrading an existing database
@@ -72,6 +73,10 @@ ALTER TABLE IF EXISTS activities
 -- Add cost_split_type column if upgrading an existing database
 ALTER TABLE IF EXISTS activities
   ADD COLUMN IF NOT EXISTS cost_split_type TEXT CHECK (cost_split_type IN ('equal', 'individual', 'none')) DEFAULT 'none';
+
+-- Add cost_paid column if upgrading an existing database
+ALTER TABLE IF EXISTS activities
+  ADD COLUMN IF NOT EXISTS cost_paid BOOLEAN DEFAULT false;
 
 -- Expenses table
 CREATE TABLE IF NOT EXISTS expenses (
