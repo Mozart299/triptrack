@@ -19,6 +19,14 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 interface NewActivityPageProps {
@@ -195,9 +203,7 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -277,20 +283,27 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
 
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <select
-                    id="category"
-                    name="category"
+                  <Select
                     value={formData.category}
-                    onChange={handleChange}
-                    className="h-10 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        category: value as typeof formData.category,
+                      }))
+                    }
                   >
-                    <option value="other">Other</option>
-                    <option value="transport">Transport</option>
-                    <option value="accommodation">Accommodation</option>
-                    <option value="dining">Dining</option>
-                    <option value="sightseeing">Sightseeing</option>
-                    <option value="entertainment">Entertainment</option>
-                  </select>
+                    <SelectTrigger id="category">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="transport">Transport</SelectItem>
+                      <SelectItem value="accommodation">Accommodation</SelectItem>
+                      <SelectItem value="dining">Dining</SelectItem>
+                      <SelectItem value="sightseeing">Sightseeing</SelectItem>
+                      <SelectItem value="entertainment">Entertainment</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -310,56 +323,53 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
 
               <div className="space-y-3">
                 <Label>Cost Split Type</Label>
-                <div className="space-y-2">
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50">
-                    <input
-                      type="radio"
-                      name="costSplitType"
-                      value="none"
-                      checked={formData.costSplitType === 'none'}
-                      onChange={handleChange}
-                      className="size-4 accent-primary"
-                    />
+                <RadioGroup
+                  value={formData.costSplitType}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      costSplitType: value as CostSplitType,
+                    }))
+                  }
+                  className="space-y-2"
+                >
+                  <Label
+                    htmlFor="split-none"
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                  >
+                    <RadioGroupItem value="none" id="split-none" />
                     <div>
                       <div className="font-medium">No Split</div>
                       <div className="text-sm text-muted-foreground">
                         Single person or untracked cost
                       </div>
                     </div>
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50">
-                    <input
-                      type="radio"
-                      name="costSplitType"
-                      value="equal"
-                      checked={formData.costSplitType === 'equal'}
-                      onChange={handleChange}
-                      className="size-4 accent-primary"
-                    />
+                  </Label>
+                  <Label
+                    htmlFor="split-equal"
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                  >
+                    <RadioGroupItem value="equal" id="split-equal" />
                     <div>
                       <div className="font-medium">Split Equally</div>
                       <div className="text-sm text-muted-foreground">
                         Divide cost evenly among all participants
                       </div>
                     </div>
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50">
-                    <input
-                      type="radio"
-                      name="costSplitType"
-                      value="individual"
-                      checked={formData.costSplitType === 'individual'}
-                      onChange={handleChange}
-                      className="size-4 accent-primary"
-                    />
+                  </Label>
+                  <Label
+                    htmlFor="split-individual"
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                  >
+                    <RadioGroupItem value="individual" id="split-individual" />
                     <div>
                       <div className="font-medium">Individual Costs</div>
                       <div className="text-sm text-muted-foreground">
                         Set different costs for each participant
                       </div>
                     </div>
-                  </label>
-                </div>
+                  </Label>
+                </RadioGroup>
               </div>
 
               {formData.costSplitType === 'equal' && (

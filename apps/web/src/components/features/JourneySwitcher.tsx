@@ -1,6 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface Journey {
   id: string;
@@ -19,16 +26,20 @@ export default function JourneySwitcher({
   const router = useRouter();
 
   return (
-    <select
+    <Select
       value={selectedJourneyId}
-      onChange={(e) => router.push(`/activities?journey=${e.target.value}`)}
-      className="h-10 rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+      onValueChange={(id) => router.push(`/activities?journey=${id}`)}
     >
-      {journeys.map((j) => (
-        <option key={j.id} value={j.id}>
-          {j.title}
-        </option>
-      ))}
-    </select>
+      <SelectTrigger className="w-48">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {journeys.map((j) => (
+          <SelectItem key={j.id} value={j.id}>
+            {j.title}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

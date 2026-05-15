@@ -9,6 +9,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { isErrorWithMessage } from '@/lib/errors';
 
@@ -122,9 +129,7 @@ export default function JourneyForm({
   };
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -194,20 +199,24 @@ export default function JourneyForm({
 
       <div className="space-y-2">
         <Label htmlFor="currency">Currency *</Label>
-        <select
-          id="currency"
-          name="currency"
+        <Select
           value={formData.currency}
-          onChange={handleChange}
-          className="h-10 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          onValueChange={(value) =>
+            setFormData((prev) => ({ ...prev, currency: value }))
+          }
           required
         >
-          {CURRENCIES.map((currency) => (
-            <option key={currency.code} value={currency.code}>
-              {currency.symbol} - {currency.name} ({currency.code})
-            </option>
-          ))}
-        </select>
+          <SelectTrigger id="currency">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {CURRENCIES.map((currency) => (
+              <SelectItem key={currency.code} value={currency.code}>
+                {currency.symbol} - {currency.name} ({currency.code})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
