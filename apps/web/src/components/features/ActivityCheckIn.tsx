@@ -2,17 +2,24 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CalendarClock, Check, CircleDollarSign, MapPin } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Activity } from '@/types';
 import { formatCurrency } from '@/lib/currency';
 import ActivityCostBreakdown from './ActivityCostBreakdown';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ActivityCheckInProps {
   activity: Activity;
   currency: string;
 }
 
-export default function ActivityCheckIn({ activity, currency }: ActivityCheckInProps) {
+export default function ActivityCheckIn({
+  activity,
+  currency,
+}: ActivityCheckInProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -32,67 +39,76 @@ export default function ActivityCheckIn({ activity, currency }: ActivityCheckInP
   };
 
   return (
-    <div className="card bg-gradient-to-r from-primary-50 to-primary-100 border-2 border-primary-200">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl">
-              {activity.category === 'dining'
-                ? '🍽️'
-                : activity.category === 'accommodation'
-                ? '🏨'
-                : activity.category === 'transport'
-                ? '🚗'
-                : activity.category === 'sightseeing'
-                ? '🏛️'
-                : activity.category === 'entertainment'
-                ? '🎭'
-                : '📍'}
-            </span>
-            <h3 className="font-bold text-gray-900">{activity.title}</h3>
-          </div>
-          {activity.description && (
-            <p className="text-sm text-gray-700 mb-2">{activity.description}</p>
-          )}
-          {activity.estimated_cost !== undefined && activity.estimated_cost !== null && (
-            <div className="text-sm text-gray-700 mb-2">
-              <p>💵 Estimated: {formatCurrency(activity.estimated_cost, currency)}</p>
-              {activity.cost_split_type === 'equal' && (
-                <p className="text-xs text-gray-600 mt-1">Split equally among participants</p>
-              )}
-              {activity.cost_split_type === 'individual' && (
-                <div className="mt-2 bg-white/50 p-2 rounded border border-gray-200">
-                  <p className="text-xs text-gray-600 font-medium mb-1">Individual costs:</p>
-                  <ActivityCostBreakdown activityId={activity.id} currency={currency} />
+    <Card className="border-primary/30 bg-accent/50">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Badge variant="secondary">{activity.category || 'activity'}</Badge>
+          {activity.title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            {activity.description && (
+              <p className="mb-2 text-sm text-muted-foreground">
+                {activity.description}
+              </p>
+            )}
+            {activity.estimated_cost !== undefined &&
+              activity.estimated_cost !== null && (
+                <div className="mb-2 text-sm text-foreground">
+                  <p className="flex items-center gap-1.5">
+                    <CircleDollarSign className="size-4 text-muted-foreground" />
+                    Estimated:{' '}
+                    {formatCurrency(activity.estimated_cost, currency)}
+                  </p>
+                  {activity.cost_split_type === 'equal' && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Split equally among participants
+                    </p>
+                  )}
+                  {activity.cost_split_type === 'individual' && (
+                    <div className="mt-2 rounded-lg border bg-background/70 p-2">
+                      <p className="mb-1 text-xs font-medium text-muted-foreground">
+                        Individual costs:
+                      </p>
+                      <ActivityCostBreakdown
+                        activityId={activity.id}
+                        currency={currency}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
-          {activity.location && (
-            <p className="text-xs text-gray-600 font-medium">
-              📍 {activity.location}
-            </p>
-          )}
-          {activity.scheduled_at && (
-            <p className="text-xs text-gray-600 mt-1">
-              🕒{' '}
-              {new Date(activity.scheduled_at).toLocaleString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-              })}
-            </p>
-          )}
+            {activity.location && (
+              <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                <MapPin className="size-3.5" />
+                {activity.location}
+              </p>
+            )}
+            {activity.scheduled_at && (
+              <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <CalendarClock className="size-3.5" />
+                {new Date(activity.scheduled_at).toLocaleString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
-      <button
-        onClick={handleCheckIn}
-        disabled={loading}
-        className="w-full mt-4 bg-primary-600 text-white py-3 rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
-      >
-        {loading ? 'Checking in...' : '✓ Check In'}
-      </button>
-    </div>
+        <Button
+          onClick={handleCheckIn}
+          disabled={loading}
+          className="mt-4 w-full"
+          size="lg"
+        >
+          <Check className="size-4" />
+          {loading ? 'Checking in...' : 'Check In'}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

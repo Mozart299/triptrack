@@ -30,7 +30,8 @@ export default function ActivityCostBreakdown({
 
       const { data } = await supabase
         .from('activity_participant_costs')
-        .select(`
+        .select(
+          `
           user_id,
           amount,
           notes,
@@ -38,7 +39,8 @@ export default function ActivityCostBreakdown({
             full_name,
             email
           )
-        `)
+        `,
+        )
         .eq('activity_id', activityId);
 
       if (data) {
@@ -59,11 +61,13 @@ export default function ActivityCostBreakdown({
   }, [activityId]);
 
   if (loading) {
-    return <p className="text-xs text-gray-500">Loading costs...</p>;
+    return <p className="text-xs text-muted-foreground">Loading costs...</p>;
   }
 
   if (costs.length === 0) {
-    return <p className="text-xs text-gray-500">No individual costs set</p>;
+    return (
+      <p className="text-xs text-muted-foreground">No individual costs set</p>
+    );
   }
 
   const totalCost = costs.reduce((sum, cost) => sum + cost.amount, 0);
@@ -71,26 +75,31 @@ export default function ActivityCostBreakdown({
   return (
     <div className="mt-2 space-y-2">
       {costs.map((cost) => (
-        <div key={cost.user_id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs">
+        <div
+          key={cost.user_id}
+          className="flex flex-col gap-1 text-xs sm:flex-row sm:items-center sm:justify-between"
+        >
           <div className="flex-1 min-w-0">
-            <span className="text-gray-700 font-medium block truncate">
+            <span className="block truncate font-medium">
               {cost.full_name || cost.email}
             </span>
             {cost.notes && (
-              <span className="text-gray-500 block sm:inline sm:ml-1 truncate">
+              <span className="block truncate text-muted-foreground sm:ml-1 sm:inline">
                 ({cost.notes})
               </span>
             )}
           </div>
-          <span className="font-medium text-gray-900 sm:shrink-0">
+          <span className="font-medium sm:shrink-0">
             {formatCurrency(cost.amount, currency)}
           </span>
         </div>
       ))}
       {costs.length > 1 && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs font-semibold text-gray-900 pt-2 border-t border-gray-200">
+        <div className="flex flex-col gap-1 border-t pt-2 text-xs font-semibold sm:flex-row sm:items-center sm:justify-between">
           <span>Total</span>
-          <span className="sm:shrink-0">{formatCurrency(totalCost, currency)}</span>
+          <span className="sm:shrink-0">
+            {formatCurrency(totalCost, currency)}
+          </span>
         </div>
       )}
     </div>

@@ -23,7 +23,9 @@ export default function JourneyParticipantCostSummary({
   participants,
   currency,
 }: JourneyParticipantCostSummaryProps) {
-  const [participantTotals, setParticipantTotals] = useState<ParticipantTotal[]>([]);
+  const [participantTotals, setParticipantTotals] = useState<
+    ParticipantTotal[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -66,17 +68,21 @@ export default function JourneyParticipantCostSummary({
           // Divide equally among selected participants
           const selectedParticipants = activity.split_participants || [];
           if (selectedParticipants.length > 0) {
-            const perPerson = activity.estimated_cost / selectedParticipants.length;
+            const perPerson =
+              activity.estimated_cost / selectedParticipants.length;
             selectedParticipants.forEach((userId) => {
               if (totals[userId] !== undefined) {
                 totals[userId] = (totals[userId] || 0) + perPerson;
               }
             });
           }
-        } else if (activity.cost_split_type === 'individual' && participantCosts) {
+        } else if (
+          activity.cost_split_type === 'individual' &&
+          participantCosts
+        ) {
           // Use individual costs
           const activityCosts = participantCosts.filter(
-            (pc) => pc.activity_id === activity.id
+            (pc) => pc.activity_id === activity.id,
           );
           activityCosts.forEach((cost) => {
             if (totals[cost.user_id] !== undefined) {
@@ -103,7 +109,9 @@ export default function JourneyParticipantCostSummary({
   }, [journeyId, participants, currency]);
 
   if (loading) {
-    return <p className="text-sm text-gray-500">Calculating costs...</p>;
+    return (
+      <p className="text-sm text-muted-foreground">Calculating costs...</p>
+    );
   }
 
   if (participantTotals.length === 0) {
@@ -114,29 +122,31 @@ export default function JourneyParticipantCostSummary({
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm sm:text-base font-semibold text-gray-900">Cost Per Participant</h3>
+      <h3 className="text-sm sm:text-base font-semibold">
+        Cost Per Participant
+      </h3>
       <div className="space-y-2">
         {participantTotals.map((participant) => (
           <div
             key={participant.userId}
-            className="flex items-center justify-between py-3 px-2 sm:px-3 border-b border-gray-100 min-h-[44px]"
+            className="flex min-h-[44px] items-center justify-between border-b py-3 px-2 sm:px-3"
           >
             <div className="flex-1 min-w-0 pr-3">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {participant.name}
+              <p className="truncate text-sm font-medium">{participant.name}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {participant.email}
               </p>
-              <p className="text-xs text-gray-500 truncate">{participant.email}</p>
             </div>
-            <div className="text-sm sm:text-base font-semibold text-gray-900 shrink-0">
+            <div className="shrink-0 text-sm font-semibold sm:text-base">
               {formatCurrency(participant.total, currency)}
             </div>
           </div>
         ))}
       </div>
       {participantTotals.length > 1 && (
-        <div className="flex items-center justify-between pt-3 px-2 sm:px-3 border-t-2 border-gray-300 min-h-[44px]">
-          <p className="text-sm sm:text-base font-bold text-gray-900">Total</p>
-          <p className="text-sm sm:text-base font-bold text-primary-700 shrink-0">
+        <div className="flex min-h-[44px] items-center justify-between border-t-2 px-2 pt-3 sm:px-3">
+          <p className="text-sm font-bold sm:text-base">Total</p>
+          <p className="shrink-0 text-sm font-bold text-primary sm:text-base">
             {formatCurrency(grandTotal, currency)}
           </p>
         </div>

@@ -1,6 +1,8 @@
 'use client';
 
 import { Profile } from '@/types';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface ParticipantCost {
   userId: string;
@@ -61,11 +63,9 @@ export default function ParticipantCostInput({
   return (
     <div className="space-y-3">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Individual Participant Costs
-        </label>
+        <Label>Individual Participant Costs</Label>
         {totalCost > 0 && (
-          <span className="text-sm font-semibold text-primary-700">
+          <span className="text-sm font-semibold text-primary">
             Total: {currency} {totalCost.toFixed(2)}
           </span>
         )}
@@ -77,18 +77,22 @@ export default function ParticipantCostInput({
           return (
             <div
               key={participant.id}
-              className="bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-200"
+              className="rounded-lg border bg-muted/30 p-3 sm:p-4"
             >
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="truncate text-sm font-medium">
                     {participant.full_name || participant.email}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">{participant.email}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {participant.email}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2 sm:shrink-0">
-                  <span className="text-sm text-gray-600">{currency}</span>
-                  <input
+                  <span className="text-sm text-muted-foreground">
+                    {currency}
+                  </span>
+                  <Input
                     type="number"
                     min="0"
                     step="0.01"
@@ -97,16 +101,18 @@ export default function ParticipantCostInput({
                       handleAmountChange(participant.id, e.target.value)
                     }
                     placeholder="0.00"
-                    className="input w-full sm:w-28 md:w-32 text-right min-h-[44px]"
+                    className="min-h-[44px] w-full text-right sm:w-28 md:w-32"
                   />
                 </div>
               </div>
-              <input
+              <Input
                 type="text"
                 value={cost?.notes || ''}
-                onChange={(e) => handleNotesChange(participant.id, e.target.value)}
+                onChange={(e) =>
+                  handleNotesChange(participant.id, e.target.value)
+                }
                 placeholder="Notes (optional)"
-                className="input text-sm w-full min-h-[44px]"
+                className="min-h-[44px] w-full text-sm"
               />
             </div>
           );
@@ -114,7 +120,7 @@ export default function ParticipantCostInput({
       </div>
 
       {participants.length === 0 && (
-        <p className="text-sm text-gray-500 text-center py-4">
+        <p className="text-center text-sm text-muted-foreground py-4">
           No participants in this journey yet. Individual costs can be set when
           participants are added.
         </p>

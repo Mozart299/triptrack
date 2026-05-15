@@ -2,6 +2,17 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface InviteProps {
   journeyId: string;
@@ -11,7 +22,10 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [message, setMessage] = useState<{
+    text: string;
+    type: 'success' | 'error';
+  } | null>(null);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +36,9 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
       const supabase = createClient();
 
       // Get current user info for the invitation
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       const { data: profile } = await supabase
         .from('profiles')
         .select('full_name')
@@ -30,13 +46,16 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
         .single();
 
       // Call the Edge Function to send invitation
-      const { data, error } = await supabase.functions.invoke('send-journey-invite', {
-        body: {
-          journeyId,
-          inviteeEmail: email.toLowerCase().trim(),
-          inviterName: profile?.full_name || 'A friend',
+      const { data, error } = await supabase.functions.invoke(
+        'send-journey-invite',
+        {
+          body: {
+            journeyId,
+            inviteeEmail: email.toLowerCase().trim(),
+            inviterName: profile?.full_name || 'A friend',
+          },
         },
-      });
+      );
 
       if (error) {
         throw error;
@@ -52,12 +71,12 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
       if (data.userExists) {
         setMessage({
           text: '✓ Invitation sent! They have been added to the trip and will receive an email.',
-          type: 'success'
+          type: 'success',
         });
       } else {
         setMessage({
           text: '✓ Invitation sent! They will receive an email with signup instructions.',
-          type: 'success'
+          type: 'success',
         });
       }
 
@@ -68,12 +87,11 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
         setOpen(false);
         window.location.reload();
       }, 2000);
-
     } catch (err: any) {
       console.error('Invitation error:', err);
       setMessage({
         text: err?.message || 'Failed to send invitation. Please try again.',
-        type: 'error'
+        type: 'error',
       });
     } finally {
       setLoading(false);
@@ -82,57 +100,62 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
 
   return (
     <div>
-      <button
+      <Button
         onClick={() => setOpen(true)}
-        className="w-full mt-4 btn-secondary text-sm"
+        variant="secondary"
+        className="mt-4 w-full"
       >
-        + Invite Participant
-      </button>
+        Invite Participant
+      </Button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 9999 }}
-        >
-          <div
-            className="bg-white rounded-lg p-6 w-full max-w-md"
-            style={{ backgroundColor: 'white', maxWidth: '28rem', padding: '1.5rem', borderRadius: '0.5rem' }}
-          >
-            <h3 className="text-lg font-semibold mb-2">Invite Participant</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Enter their email address. They'll receive an invitation to join this trip.
-              {' '}If they don't have an account, they'll be invited to sign up.
-            </p>
-            <form onSubmit={handleInvite} className="space-y-3">
-              <input
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invite Participant</DialogTitle>
+            <DialogDescription>
+              Enter their email address. They'll receive an invitation to join
+              this trip.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleInvite} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="invite-email">Email</Label>
+              <Input
+                id="invite-email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="friend@example.com"
-                className="input-field w-full"
               />
-              {message && (
-                <div className={`text-sm p-3 rounded-lg ${
+            </div>
+            {message && (
+              <Alert
+                variant={message.type === 'error' ? 'destructive' : 'default'}
+                className={
                   message.type === 'success'
-                    ? 'bg-green-50 text-green-700 border border-green-200'
-                    : 'bg-red-50 text-red-700 border border-red-200'
-                }`}>
-                  {message.text}
-                </div>
-              )}
-              <div className="flex gap-2 mt-3">
-                <button type="submit" disabled={loading} className="btn-primary flex-1">
-                  {loading ? 'Sending Invitation…' : 'Send Invitation'}
-                </button>
-                <button type="button" onClick={() => setOpen(false)} className="btn-secondary">
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                    : undefined
+                }
+              >
+                <AlertDescription>{message.text}</AlertDescription>
+              </Alert>
+            )}
+            <div className="flex gap-2">
+              <Button type="submit" disabled={loading} className="flex-1">
+                {loading ? 'Sending Invitation...' : 'Send Invitation'}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setOpen(false)}
+                variant="secondary"
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

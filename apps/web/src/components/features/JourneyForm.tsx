@@ -5,6 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { CURRENCIES } from '@/lib/currency';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface JourneyFormData {
   title: string;
@@ -17,10 +22,13 @@ interface JourneyFormData {
 
 interface JourneyFormProps {
   initialData?: JourneyFormData;
-  journeyId?: string;           
+  journeyId?: string;
 }
 
-export default function JourneyForm({ initialData, journeyId }: JourneyFormProps) {
+export default function JourneyForm({
+  initialData,
+  journeyId,
+}: JourneyFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +54,9 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
     setError(null);
 
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       setError('You must be logged in.');
@@ -70,9 +80,8 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
           .eq('id', journeyId);
 
         if (updateError) throw updateError;
-        
-        router.push(`/journeys/${journeyId}`);
 
+        router.push(`/journeys/${journeyId}`);
       } else {
         const { data: journey, error: createError } = await supabase
           .from('journeys')
@@ -105,14 +114,17 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
       }
 
       router.refresh();
-
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -122,85 +134,71 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-          Trip Name *
-        </label>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="title">Trip Name *</Label>
+        <Input
           type="text"
           id="title"
           name="title"
           value={formData.title}
           onChange={handleChange}
-          className="input-field"
           placeholder="Summer in Lisbon"
           required
         />
       </div>
 
-      <div>
-        <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
-          Destination *
-        </label>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="destination">Destination *</Label>
+        <Input
           type="text"
           id="destination"
           name="destination"
           value={formData.destination}
           onChange={handleChange}
-          className="input-field"
           placeholder="Lisbon, Portugal"
           required
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-2">
-            Start Date *
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="start_date">Start Date *</Label>
+          <Input
             type="date"
             id="start_date"
             name="start_date"
             value={formData.start_date}
             onChange={handleChange}
-            className="input-field"
             required
           />
         </div>
 
-        <div>
-          <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2">
-            End Date *
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="end_date">End Date *</Label>
+          <Input
             type="date"
             id="end_date"
             name="end_date"
             value={formData.end_date}
             onChange={handleChange}
-            className="input-field"
             required
           />
         </div>
       </div>
 
-      <div>
-        <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-2">
-          Currency *
-        </label>
+      <div className="space-y-2">
+        <Label htmlFor="currency">Currency *</Label>
         <select
           id="currency"
           name="currency"
           value={formData.currency}
           onChange={handleChange}
-          className="input-field"
+          className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           required
         >
           {CURRENCIES.map((currency) => (
@@ -211,35 +209,31 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
         </select>
       </div>
 
-      <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-          Description (Optional)
-        </label>
-        <textarea
+      <div className="space-y-2">
+        <Label htmlFor="description">Description (Optional)</Label>
+        <Textarea
           id="description"
           name="description"
           value={formData.description}
           onChange={handleChange}
-          className="input-field"
           rows={4}
           placeholder="Tell us about your trip..."
         />
       </div>
 
       <div className="flex gap-4">
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex-1 btn-primary py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create Journey')}
-        </button>
-        <Link
-          href={isEditMode ? `/journeys/${journeyId}` : "/dashboard"}
-          className="flex-1 btn-secondary py-3 text-center"
-        >
-          Cancel
-        </Link>
+        <Button type="submit" disabled={loading} className="flex-1" size="lg">
+          {loading
+            ? 'Saving...'
+            : isEditMode
+              ? 'Save Changes'
+              : 'Create Journey'}
+        </Button>
+        <Button asChild variant="secondary" className="flex-1" size="lg">
+          <Link href={isEditMode ? `/journeys/${journeyId}` : '/dashboard'}>
+            Cancel
+          </Link>
+        </Button>
       </div>
     </form>
   );

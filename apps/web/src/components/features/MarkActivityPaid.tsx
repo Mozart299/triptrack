@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Check, CircleDollarSign } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { Button } from '@/components/ui/button';
 
 interface MarkActivityPaidProps {
   activityId: string;
@@ -36,26 +38,23 @@ export default function MarkActivityPaid({
   };
 
   return (
-    <button
+    <Button
       onClick={handleToggle}
       disabled={loading}
-      className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg font-medium text-sm sm:text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] ${
-        isPaid
-          ? 'bg-green-100 text-green-700 hover:bg-green-200'
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-      }`}
+      variant={isPaid ? 'secondary' : 'outline'}
+      className="min-h-[44px]"
     >
       {isPaid ? (
         <>
-          <span className="text-lg sm:text-xl">✓</span>
+          <Check className="size-4" />
           {showLabel && <span>Paid</span>}
         </>
       ) : (
         <>
-          <span className="text-lg sm:text-xl">💵</span>
+          <CircleDollarSign className="size-4" />
           {showLabel && <span>Mark as Paid</span>}
         </>
       )}
-    </button>
+    </Button>
   );
 }

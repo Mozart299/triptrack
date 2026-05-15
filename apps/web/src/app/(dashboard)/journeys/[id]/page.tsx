@@ -1,5 +1,17 @@
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
+import {
+  ArrowLeft,
+  CalendarClock,
+  CalendarDays,
+  Check,
+  CircleDollarSign,
+  Clock,
+  MapPin,
+  Pencil,
+  Plus,
+  Users,
+} from 'lucide-react';
 import InviteParticipant from '@/components/features/InviteParticipant';
 import { createClient } from '@/lib/supabase/server';
 import type { Profile } from '@/types';
@@ -8,6 +20,17 @@ import ActivityCostBreakdown from '@/components/features/ActivityCostBreakdown';
 import JourneyParticipantCostSummary from '@/components/features/JourneyParticipantCostSummary';
 import MarkActivityPaid from '@/components/features/MarkActivityPaid';
 import { formatCurrency } from '@/lib/currency';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 export const dynamic = 'force-dynamic';
 
@@ -80,310 +103,339 @@ export default async function JourneyDetailPage({
   );
 
   return (
-    <div className="container-app py-6">
-      <div className="mb-6">
-        <Link
-          href="/journeys"
-          className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-        >
-          ← Back to Journeys
+    <div className="container-app py-8">
+      <Button asChild variant="ghost" className="mb-6 px-0">
+        <Link href="/journeys">
+          <ArrowLeft className="size-4" />
+          Back to Journeys
         </Link>
-      </div>
+      </Button>
 
-      <div className="card mb-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {journey.title}
-            </h1>
-            <p className="text-lg text-gray-600 mb-3">
-              📍 {journey.destination}
-            </p>
-            <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-              <div>
-                <span className="font-medium">Start:</span>{' '}
-                {startDate.toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </div>
-              <div>
-                <span className="font-medium">End:</span>{' '}
-                {endDate.toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </div>
-              <div>
-                <span className="font-medium">Duration:</span> {tripDuration}{' '}
-                day{tripDuration !== 1 ? 's' : ''}
-              </div>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-3xl">{journey.title}</CardTitle>
+          <CardDescription className="flex items-center gap-2 text-base">
+            <MapPin className="size-4" />
+            {journey.destination}
+          </CardDescription>
+          <CardAction>
+            <Badge
+              variant={isActive ? 'default' : 'secondary'}
+              className={isCompleted ? 'bg-muted text-muted-foreground' : ''}
+            >
+              {isActive ? 'Active' : isCompleted ? 'Completed' : 'Planning'}
+            </Badge>
+          </CardAction>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <CalendarDays className="size-4" />
+              Start:{' '}
+              {startDate.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <CalendarDays className="size-4" />
+              End:{' '}
+              {endDate.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock className="size-4" />
+              Duration: {tripDuration} day{tripDuration !== 1 ? 's' : ''}
             </div>
           </div>
-          <span
-            className={`px-4 py-2 rounded-full text-sm font-medium ${
-              isActive
-                ? 'bg-green-100 text-green-700'
-                : isCompleted
-                  ? 'bg-gray-100 text-gray-700'
-                  : 'bg-blue-100 text-blue-700'
-            }`}
-          >
-            {isActive ? 'Active' : isCompleted ? 'Completed' : 'Planning'}
-          </span>
-        </div>
 
-        {journey.description && (
-          <div className="mb-4">
-            <p className="text-gray-700">{journey.description}</p>
-          </div>
-        )}
+          {journey.description && (
+            <p className="text-muted-foreground">{journey.description}</p>
+          )}
 
-        {!isCompleted && !isActive && daysUntil > 0 && (
-          <div className="bg-primary-50 px-4 py-3 rounded-lg">
-            <p className="text-sm text-primary-700">
-              🕒 Your trip starts in {daysUntil} day{daysUntil !== 1 ? 's' : ''}
-            </p>
-          </div>
-        )}
+          {!isCompleted && !isActive && daysUntil > 0 && (
+            <div className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-3 text-sm text-secondary-foreground">
+              <Clock className="size-4" />
+              Your trip starts in {daysUntil} day{daysUntil !== 1 ? 's' : ''}
+            </div>
+          )}
 
-        {isActive && (
-          <div className="bg-green-50 px-4 py-3 rounded-lg">
-            <p className="text-sm text-green-700">
-              ✨ Your trip is happening now! Have an amazing time!
-            </p>
-          </div>
-        )}
-      </div>
+          {isActive && (
+            <div className="rounded-lg bg-accent px-4 py-3 text-sm text-accent-foreground">
+              Your trip is happening now.
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="card">
-          <div className="text-sm text-gray-600 mb-1">Activities</div>
-          <div className="text-2xl font-bold text-gray-900">
-            {completedActivities}/{activities?.length || 0}
-          </div>
-          <div className="text-xs text-gray-500 mt-1">completed</div>
-        </div>
-        <div className="card">
-          <div className="text-sm text-gray-600 mb-1">Participants</div>
-          <div className="text-2xl font-bold text-gray-900">
-            {participants?.length || 0}
-          </div>
-        </div>
-        <div className="card">
-          <div className="text-sm text-gray-600 mb-1">Estimated Budget</div>
-          <div className="text-2xl font-bold text-gray-900">
-            {formatCurrency(
-              activities?.reduce((s, a) => s + (a.estimated_cost || 0), 0) || 0,
-              journey.currency
-            )}
-          </div>
-        </div>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-sm text-muted-foreground">Activities</div>
+            <div className="mt-1 text-2xl font-semibold">
+              {completedActivities}/{activities?.length || 0}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">completed</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-sm text-muted-foreground">Participants</div>
+            <div className="mt-1 text-2xl font-semibold">
+              {participants?.length || 0}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-sm text-muted-foreground">
+              Estimated Budget
+            </div>
+            <div className="mt-1 text-2xl font-semibold">
+              {formatCurrency(
+                activities?.reduce((s, a) => s + (a.estimated_cost || 0), 0) ||
+                  0,
+                journey.currency,
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="card">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Activities</h2>
-              <Link
-                href={`/journeys/${id}/activities/new`}
-                className="btn-primary text-sm"
-              >
-                + Add Activity
-              </Link>
-            </div>
-
-            {activities && activities.length > 0 ? (
-              <div className="space-y-3">
-                {activities.map((activity) => {
-                  const scheduledAt = activity.scheduled_at
-                    ? new Date(activity.scheduled_at)
-                    : null;
-
-                  return (
-                    <div
-                      key={activity.id}
-                      className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-gray-900">
-                              {activity.title}
-                            </h3>
-                            {activity.cost_paid && (
-                              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
-                                Paid
-                              </span>
-                            )}
-                          </div>
-                          {activity.location && (
-                            <p className="text-sm text-gray-600 mt-1">
-                              📍 {activity.location}
-                            </p>
-                          )}
-                          {activity.estimated_cost !== undefined &&
-                            activity.estimated_cost !== null && (
-                              <div className="text-sm text-gray-700 mt-2">
-                                <p className={activity.cost_paid ? 'line-through opacity-60' : ''}>
-                                  💵 Estimated: {formatCurrency(activity.estimated_cost, journey.currency)}
-                                </p>
-                                {activity.cost_split_type === 'equal' && (
-                                  <p className="text-xs text-gray-600 mt-1">Split equally among participants</p>
-                                )}
-                                {activity.cost_split_type === 'individual' && (
-                                  <div className="mt-2 bg-gray-50 p-2 rounded border border-gray-200">
-                                    <p className="text-xs text-gray-600 font-medium mb-1">Individual costs:</p>
-                                    <ActivityCostBreakdown activityId={activity.id} currency={journey.currency} />
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                        </div>
-                        {activity.completed_at && (
-                          <span className="text-green-600 text-sm">✓</span>
-                        )}
-                      </div>
-
-                      {activity.description && (
-                        <p className="text-sm text-gray-600 mb-2">
-                          {activity.description}
-                        </p>
-                      )}
-
-                      <div className="flex flex-wrap gap-3 text-xs text-gray-500 mb-3">
-                        {scheduledAt && (
-                          <div>
-                            🕒{' '}
-                            {scheduledAt.toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                            })}{' '}
-                            at{' '}
-                            {scheduledAt.toLocaleTimeString('en-US', {
-                              hour: 'numeric',
-                              minute: '2-digit',
-                            })}
-                          </div>
-                        )}
-                        {activity.category && (
-                          <div className="px-2 py-1 bg-gray-100 rounded">
-                            {activity.category}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex gap-2 pt-2 border-t border-gray-100">
-                        {activity.estimated_cost && activity.estimated_cost > 0 && (
-                          <MarkActivityPaid
-                            activityId={activity.id}
-                            initialPaidStatus={activity.cost_paid}
-                          />
-                        )}
-                        <Link
-                          href={`/journeys/${id}/activities/${activity.id}/edit`}
-                          className="flex-1 text-center px-3 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded transition-colors"
-                        >
-                          Edit
-                        </Link>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-2">📅</div>
-                <p className="text-gray-600 text-sm mb-4">
-                  No activities planned yet
-                </p>
-                <Link
-                  href={`/journeys/${id}/activities/new`}
-                  className="btn-primary text-sm inline-block"
-                >
-                  Add Your First Activity
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="lg:col-span-1">
-          <div className="card">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Participants
-            </h2>
-
-            {participants && participants.length > 0 ? (
-              <>
-                <div className="space-y-3 mb-6">
-                  {participants.map((participant) => {
-                    const profile = participant.profiles as unknown as Profile;
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Activities</CardTitle>
+              <CardAction>
+                <Button asChild>
+                  <Link href={`/journeys/${id}/activities/new`}>
+                    <Plus className="size-4" />
+                    Add Activity
+                  </Link>
+                </Button>
+              </CardAction>
+            </CardHeader>
+            <CardContent>
+              {activities && activities.length > 0 ? (
+                <div className="space-y-3">
+                  {activities.map((activity) => {
+                    const scheduledAt = activity.scheduled_at
+                      ? new Date(activity.scheduled_at)
+                      : null;
 
                     return (
-                      <div
-                        key={participant.id}
-                        className="flex items-center gap-3"
-                      >
-                        <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold">
-                          {profile?.full_name?.[0]?.toUpperCase() ||
-                            profile?.email?.[0]?.toUpperCase() ||
-                            '?'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 truncate">
-                            {profile?.full_name || 'Unknown'}
+                      <Card key={activity.id} size="sm">
+                        <CardContent>
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-medium">
+                                  {activity.title}
+                                </h3>
+                                {activity.cost_paid && (
+                                  <Badge className="bg-emerald-100 text-emerald-700">
+                                    Paid
+                                  </Badge>
+                                )}
+                              </div>
+                              {activity.location && (
+                                <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                                  <MapPin className="size-3.5" />
+                                  {activity.location}
+                                </p>
+                              )}
+                              {activity.estimated_cost !== undefined &&
+                                activity.estimated_cost !== null && (
+                                  <div className="mt-2 text-sm text-foreground">
+                                    <p
+                                      className={
+                                        activity.cost_paid
+                                          ? 'line-through opacity-60'
+                                          : ''
+                                      }
+                                    >
+                                      <CircleDollarSign className="mr-1 inline size-3.5 text-muted-foreground" />
+                                      Estimated:{' '}
+                                      {formatCurrency(
+                                        activity.estimated_cost,
+                                        journey.currency,
+                                      )}
+                                    </p>
+                                    {activity.cost_split_type === 'equal' && (
+                                      <p className="mt-1 text-xs text-muted-foreground">
+                                        Split equally among participants
+                                      </p>
+                                    )}
+                                    {activity.cost_split_type ===
+                                      'individual' && (
+                                      <div className="mt-2 rounded-lg border bg-muted/40 p-2">
+                                        <p className="mb-1 text-xs font-medium text-muted-foreground">
+                                          Individual costs:
+                                        </p>
+                                        <ActivityCostBreakdown
+                                          activityId={activity.id}
+                                          currency={journey.currency}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                            </div>
+                            {activity.completed_at && (
+                              <Check className="size-4 text-emerald-600" />
+                            )}
                           </div>
-                          <div className="text-xs text-gray-500 truncate">
-                            {profile?.email}
+
+                          {activity.description && (
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {activity.description}
+                            </p>
+                          )}
+
+                          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
+                            {scheduledAt && (
+                              <div className="flex items-center gap-1.5">
+                                <CalendarClock className="size-3.5" />
+                                {scheduledAt.toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}{' '}
+                                at{' '}
+                                {scheduledAt.toLocaleTimeString('en-US', {
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                })}
+                              </div>
+                            )}
+                            {activity.category && (
+                              <Badge variant="secondary">
+                                {activity.category}
+                              </Badge>
+                            )}
                           </div>
-                        </div>
-                        {participant.role === 'owner' && (
-                          <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded">
-                            Owner
-                          </span>
-                        )}
-                      </div>
+
+                          <Separator className="mb-2" />
+                          <div className="flex gap-2">
+                            {activity.estimated_cost &&
+                              activity.estimated_cost > 0 && (
+                                <MarkActivityPaid
+                                  activityId={activity.id}
+                                  initialPaidStatus={activity.cost_paid}
+                                />
+                              )}
+                            <Button asChild variant="ghost" className="flex-1">
+                              <Link
+                                href={`/journeys/${id}/activities/${activity.id}/edit`}
+                              >
+                                <Pencil className="size-4" />
+                                Edit
+                              </Link>
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
                     );
                   })}
                 </div>
-                <div className="pt-4 border-t border-gray-200">
-                  <JourneyParticipantCostSummary
-                    journeyId={id}
-                    participants={participants.map((p) => p.profiles as unknown as Profile)}
-                    currency={journey.currency}
-                  />
+              ) : (
+                <div className="text-center py-8">
+                  <CalendarDays className="mx-auto mb-3 size-8 text-muted-foreground" />
+                  <p className="text-muted-foreground text-sm mb-4">
+                    No activities planned yet
+                  </p>
+                  <Button asChild>
+                    <Link href={`/journeys/${id}/activities/new`}>
+                      Add Your First Activity
+                    </Link>
+                  </Button>
                 </div>
-              </>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-gray-600 text-sm">
-                  Just you on this journey
-                </p>
-              </div>
-            )}
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-            <InviteParticipant journeyId={id} />
-          </div>
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Participants</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {participants && participants.length > 0 ? (
+                <>
+                  <div className="space-y-3 mb-6">
+                    {participants.map((participant) => {
+                      const profile =
+                        participant.profiles as unknown as Profile;
+
+                      return (
+                        <div
+                          key={participant.id}
+                          className="flex items-center gap-3"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground font-semibold">
+                            {profile?.full_name?.[0]?.toUpperCase() ||
+                              profile?.email?.[0]?.toUpperCase() ||
+                              '?'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate">
+                              {profile?.full_name || 'Unknown'}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {profile?.email}
+                            </div>
+                          </div>
+                          {participant.role === 'owner' && (
+                            <Badge variant="secondary">Owner</Badge>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <Separator className="mb-4" />
+                  <div>
+                    <JourneyParticipantCostSummary
+                      journeyId={id}
+                      participants={participants.map(
+                        (p) => p.profiles as unknown as Profile,
+                      )}
+                      currency={journey.currency}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <Users className="mx-auto mb-3 size-8 text-muted-foreground" />
+                  <p className="text-muted-foreground text-sm">
+                    Just you on this journey
+                  </p>
+                </div>
+              )}
+
+              <InviteParticipant journeyId={id} />
+            </CardContent>
+          </Card>
 
           {isOwner && (
-            <div className="card mt-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                Quick Actions
-              </h2>
-              <div className="space-y-2">
-                <Link
-                  href={`/journeys/${id}/edit`}
-                  className="block w-full btn-secondary text-sm text-center"
-                >
-                  Edit Journey
-                </Link>
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="text-xl">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild variant="secondary" className="w-full">
+                  <Link href={`/journeys/${id}/edit`}>
+                    <Pencil className="size-4" />
+                    Edit Journey
+                  </Link>
+                </Button>
                 <DeleteJourneyButton journeyId={id} />
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>

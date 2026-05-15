@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { JourneyParticipant } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface AddExpenseFormProps {
   journeyId: string;
@@ -67,35 +70,24 @@ export default function AddExpenseForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label
-          htmlFor="title"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Description
-        </label>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="title">Description</Label>
+        <Input
           type="text"
           id="title"
           value={formData.title}
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, title: e.target.value }))
           }
-          className="input-field"
-          placeholder="Dinner at Carnivore"
+          placeholder="Dinner downtown"
           required
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label
-            htmlFor="amount"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Amount ($)
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="amount">Amount ($)</Label>
+          <Input
             type="number"
             id="amount"
             step="0.01"
@@ -103,26 +95,20 @@ export default function AddExpenseForm({
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, amount: e.target.value }))
             }
-            className="input-field"
             placeholder="0.00"
             required
           />
         </div>
 
-        <div>
-          <label
-            htmlFor="category"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Category
-          </label>
+        <div className="space-y-2">
+          <Label htmlFor="category">Category</Label>
           <select
             id="category"
             value={formData.category}
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, category: e.target.value }))
             }
-            className="input-field"
+            className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <option value="food">Food</option>
             <option value="transport">Transport</option>
@@ -134,27 +120,21 @@ export default function AddExpenseForm({
         </div>
       </div>
 
-      <div>
-        <label
-          htmlFor="notes"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Notes (Optional)
-        </label>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="notes">Notes (Optional)</Label>
+        <Input
           type="text"
           id="notes"
           value={formData.notes}
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, notes: e.target.value }))
           }
-          className="input-field"
           placeholder="Any additional details..."
         />
       </div>
 
       {participants.length > 1 && (
-        <div className="flex items-center gap-2 p-3 bg-primary-50 rounded-lg">
+        <div className="flex items-center gap-2 rounded-lg bg-secondary p-3">
           <input
             type="checkbox"
             id="splitEqually"
@@ -165,21 +145,17 @@ export default function AddExpenseForm({
                 splitEqually: e.target.checked,
               }))
             }
-            className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+            className="size-4 rounded accent-primary"
           />
-          <label htmlFor="splitEqually" className="text-sm text-gray-700">
+          <Label htmlFor="splitEqually">
             Split equally among all {participants.length} participants
-          </label>
+          </Label>
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full btn-primary py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
+      <Button type="submit" disabled={loading} className="w-full" size="lg">
         {loading ? 'Adding...' : 'Add Expense'}
-      </button>
+      </Button>
     </form>
   );
 }
