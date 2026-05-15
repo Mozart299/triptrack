@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "seed:demo": "tsx scripts/seed-nairobi.ts",
     "seed:nairobi": "tsx scripts/seed-nairobi.ts"
   },
   "private": true,

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { isErrorWithMessage } from '@/lib/errors';
 
 interface JourneyFormData {
   title: string;
@@ -37,7 +38,7 @@ export default function JourneyForm({
     title: initialData?.title || '',
     description: initialData?.description || '',
     destination: initialData?.destination || '',
-    currency: (initialData as any)?.currency || 'USD',
+    currency: initialData?.currency || 'USD',
     start_date: initialData?.start_date
       ? new Date(initialData.start_date).toISOString().split('T')[0]
       : '',
@@ -114,8 +115,8 @@ export default function JourneyForm({
       }
 
       router.refresh();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(isErrorWithMessage(err) ? err.message : 'Failed to save journey');
       setLoading(false);
     }
   };

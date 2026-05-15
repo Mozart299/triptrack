@@ -44,7 +44,7 @@ Sign up, confirm your email if Supabase email confirmation is enabled, then sign
 The repo includes an optional sample seed script:
 
 ```bash
-npm run seed:nairobi YOUR-USER-ID-HERE
+npm run seed:demo YOUR-USER-ID-HERE
 ```
 
 Use this only if you want demo data. Otherwise, create your own journey from the app.

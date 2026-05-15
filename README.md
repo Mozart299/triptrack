@@ -11,7 +11,7 @@ A trip tracking and expense management web app built for any adventure.
 
 ## Tech Stack
 
-- **Frontend**: Next.js 15 (App Router) + TypeScript
+- **Frontend**: Next.js 16 (App Router) + TypeScript
 - **Styling**: Tailwind CSS (mobile-first)
 - **Backend**: Supabase (PostgreSQL + Auth + Storage)
 - **Monorepo**: Nx

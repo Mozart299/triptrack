@@ -66,3 +66,20 @@ export type JourneyStatus = 'planning' | 'active' | 'completed';
 export type ActivityCategory = 'transport' | 'accommodation' | 'dining' | 'sightseeing' | 'entertainment' | 'other';
 export type ExpenseCategory = 'transport' | 'accommodation' | 'food' | 'activities' | 'shopping' | 'other';
 export type CostSplitType = 'equal' | 'individual' | 'none';
+
+export interface JourneyParticipantProfile {
+  user_id: string;
+  email: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
+export interface ActivityParticipantCostWithProfile {
+  user_id: string;
+  amount: number;
+  notes: string | null;
+  profiles: {
+    full_name: string | null;
+    email: string | null;
+  } | null;
+}

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { Profile, CostSplitType } from '@/types';
+import { Profile, CostSplitType, JourneyParticipantProfile } from '@/types';
 import ParticipantCostInput from '@/components/features/ParticipantCostInput';
 import ParticipantSelector from '@/components/features/ParticipantSelector';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -91,7 +91,9 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
 
       if (participantsData) {
         // Map to Profile format, using user_id as id
-        const mappedParticipants = participantsData.map((p: any) => ({
+        const mappedParticipants = (
+          participantsData as JourneyParticipantProfile[]
+        ).map((p) => ({
           id: p.user_id,
           email: p.email || '',
           full_name: p.full_name,

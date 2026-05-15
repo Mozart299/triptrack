@@ -4,11 +4,23 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
-import { Profile, CostSplitType } from '@/types';
+import { Profile, CostSplitType, JourneyParticipantProfile } from '@/types';
 import ParticipantCostInput from '@/components/features/ParticipantCostInput';
 import ParticipantSelector from '@/components/features/ParticipantSelector';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -96,7 +108,9 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
 
       if (participantsData) {
         // Map to Profile format, using user_id as id
-        const mappedParticipants = participantsData.map((p: any) => ({
+        const mappedParticipants = (
+          participantsData as JourneyParticipantProfile[]
+        ).map((p) => ({
           id: p.user_id,
           email: p.email || '',
           full_name: p.full_name,
@@ -261,14 +275,6 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
   };
 
   const handleDelete = async () => {
-    if (
-      !confirm(
-        'Are you sure you want to delete this activity? This cannot be undone.',
-      )
-    ) {
-      return;
-    }
-
     setDeleting(true);
     setError(null);
 
@@ -287,11 +293,12 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
 
     if (deleteError) {
       setError(deleteError.message);
+      toast.error(`Error deleting activity: ${deleteError.message}`);
       setDeleting(false);
       return;
     }
 
-    // Redirect to journey page
+    toast.success('Activity deleted');
     router.push(`/journeys/${journeyId}`);
     router.refresh();
   };
@@ -540,18 +547,42 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
                 </Button>
               </div>
 
-              <div className="border-t pt-4">
-                <Button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={loading || deleting}
-                  className="w-full min-h-[44px]"
-                  variant="destructive"
-                  size="lg"
-                >
-                  {deleting ? 'Deleting...' : 'Delete Activity'}
-                </Button>
-              </div>
+            <div className="border-t pt-4">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    type="button"
+                    disabled={loading || deleting}
+                    className="w-full min-h-[44px]"
+                    variant="destructive"
+                    size="lg"
+                  >
+                    {deleting ? 'Deleting...' : 'Delete Activity'}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete this activity?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This removes the activity from the journey. This action
+                      cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={deleting}>
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      variant="destructive"
+                    >
+                      Delete Activity
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
             </form>
           </CardContent>
         </Card>

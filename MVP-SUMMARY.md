@@ -38,14 +38,14 @@ TripTrack is now structured as a general-purpose trip tracker for any adventure.
 
 ## Optional Sample Data
 
-The repo keeps `scripts/seed-nairobi.ts` as demo data for development. It is not part of the product scope and can be replaced with other seed scripts later.
+The repo keeps a demo seed script for development. It is not part of the product scope and can be replaced with other seed scripts later.
 
 ## Useful Commands
 
 ```bash
 npx nx dev web
 npx next build apps/web
-npm run seed:nairobi <your-user-id>
+npm run seed:demo <your-user-id>
 ```
 
 ## Current Limitations

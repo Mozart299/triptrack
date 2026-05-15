@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { isErrorWithMessage } from '@/lib/errors';
 
 interface InviteProps {
   journeyId: string;
@@ -87,10 +88,12 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
         setOpen(false);
         window.location.reload();
       }, 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Invitation error:', err);
       setMessage({
-        text: err?.message || 'Failed to send invitation. Please try again.',
+        text: isErrorWithMessage(err)
+          ? err.message
+          : 'Failed to send invitation. Please try again.',
         type: 'error',
       });
     } finally {

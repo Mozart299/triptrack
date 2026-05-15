@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/currency';
+import type { ActivityParticipantCostWithProfile } from '@/types';
 
 interface ParticipantCostData {
   user_id: string;
@@ -44,7 +45,9 @@ export default function ActivityCostBreakdown({
         .eq('activity_id', activityId);
 
       if (data) {
-        const formattedCosts = data.map((cost: any) => ({
+        const formattedCosts = (
+          data as ActivityParticipantCostWithProfile[]
+        ).map((cost) => ({
           user_id: cost.user_id,
           amount: cost.amount,
           notes: cost.notes,

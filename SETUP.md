@@ -35,10 +35,10 @@ The app will be available at http://localhost:4200.
 
 ## Optional Sample Data
 
-The repository still includes `scripts/seed-nairobi.ts` as sample/demo data:
+The repository includes an optional sample/demo seed script:
 
 ```bash
-npm run seed:nairobi <your-user-id>
+npm run seed:demo <your-user-id>
 ```
 
 This is optional and not required for normal TripTrack usage.
