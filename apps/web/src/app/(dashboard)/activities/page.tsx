@@ -184,30 +184,30 @@ export default async function ActivitiesPage() {
         <p className="mt-1 text-muted-foreground">{journey.title}</p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <Card>
-          <CardContent className="py-4 text-center">
+          <CardContent className="py-3 text-center">
             <p className="text-2xl font-semibold">{completed?.length || 0}</p>
-            <p className="text-sm text-muted-foreground">Completed</p>
+            <p className="text-xs text-muted-foreground">Completed</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="py-4 text-center">
+          <CardContent className="py-3 text-center">
             <p className="text-2xl font-semibold text-primary">
               {ongoing?.length || 0}
             </p>
-            <p className="text-sm text-muted-foreground">Ongoing</p>
+            <p className="text-xs text-muted-foreground">Ongoing</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="py-4 text-center">
+          <CardContent className="py-3 text-center">
             <p className="text-2xl font-semibold">{upcoming?.length || 0}</p>
-            <p className="text-sm text-muted-foreground">Upcoming</p>
+            <p className="text-xs text-muted-foreground">Upcoming</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="py-4 text-center">
-            <p className="text-2xl font-semibold">
+          <CardContent className="py-3 text-center">
+            <p className="text-lg font-semibold leading-tight">
               {formatCurrency(
                 activities?.reduce(
                   (sum, a) => sum + (a.estimated_cost || 0),
@@ -216,7 +216,7 @@ export default async function ActivitiesPage() {
                 journey.currency,
               )}
             </p>
-            <p className="text-sm text-muted-foreground">Estimated Budget</p>
+            <p className="text-xs text-muted-foreground">Budget</p>
           </CardContent>
         </Card>
       </div>

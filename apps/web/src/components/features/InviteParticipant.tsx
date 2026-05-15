@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -71,12 +72,12 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
       // Success!
       if (data.userExists) {
         setMessage({
-          text: '✓ Invitation sent! They have been added to the trip and will receive an email.',
+          text: 'Invitation sent! They have been added to the trip and will receive an email.',
           type: 'success',
         });
       } else {
         setMessage({
-          text: '✓ Invitation sent! They will receive an email with signup instructions.',
+          text: 'Invitation sent! They will receive an email with signup instructions.',
           type: 'success',
         });
       }
@@ -141,6 +142,9 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
                     : undefined
                 }
               >
+                {message.type === 'success' && (
+                  <CheckCircle2 className="size-4 text-emerald-600" />
+                )}
                 <AlertDescription>{message.text}</AlertDescription>
               </Alert>
             )}

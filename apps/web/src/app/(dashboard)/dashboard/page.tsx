@@ -140,15 +140,17 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="mb-8">
         <Card className="transition-colors hover:bg-accent/50">
           <Link href="/activities" className="block">
-            <CardHeader>
-              <div className="mb-2 flex size-9 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                <MapPin className="size-4" />
+            <CardHeader className="flex-row items-center gap-4 space-y-0">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+                <MapPin className="size-5" />
               </div>
-              <CardTitle>Activities</CardTitle>
-              <CardDescription>Check in and keep plans current</CardDescription>
+              <div>
+                <CardTitle>Activities</CardTitle>
+                <CardDescription>Check in and keep plans current</CardDescription>
+              </div>
             </CardHeader>
           </Link>
         </Card>

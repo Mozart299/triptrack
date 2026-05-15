@@ -37,10 +37,11 @@ export default async function JourneysPage() {
             All your trips in one place
           </p>
         </div>
-        <Button asChild size="lg">
+        <Button asChild size="lg" className="shrink-0">
           <Link href="/journeys/new">
             <Plus className="size-4" />
-            New Journey
+            <span className="hidden sm:inline">New Journey</span>
+            <span className="sm:hidden">New</span>
           </Link>
         </Button>
       </div>

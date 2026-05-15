@@ -179,30 +179,28 @@ export default async function JourneyDetailPage({
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-3 mb-6">
         <Card>
-          <CardContent className="pt-4">
-            <div className="text-sm text-muted-foreground">Activities</div>
-            <div className="mt-1 text-2xl font-semibold">
+          <CardContent className="px-3 pt-3 pb-4">
+            <div className="text-xs text-muted-foreground">Activities</div>
+            <div className="mt-1 text-xl font-semibold">
               {completedActivities}/{activities?.length || 0}
             </div>
-            <div className="mt-1 text-xs text-muted-foreground">completed</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">done</div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-4">
-            <div className="text-sm text-muted-foreground">Participants</div>
-            <div className="mt-1 text-2xl font-semibold">
+          <CardContent className="px-3 pt-3 pb-4">
+            <div className="text-xs text-muted-foreground">Participants</div>
+            <div className="mt-1 text-xl font-semibold">
               {participants?.length || 0}
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-4">
-            <div className="text-sm text-muted-foreground">
-              Estimated Budget
-            </div>
-            <div className="mt-1 text-2xl font-semibold">
+          <CardContent className="px-3 pt-3 pb-4">
+            <div className="text-xs text-muted-foreground">Budget</div>
+            <div className="mt-1 text-lg font-semibold leading-tight">
               {formatCurrency(
                 activities?.reduce((s, a) => s + (a.estimated_cost || 0), 0) ||
                   0,
@@ -335,7 +333,7 @@ export default async function JourneyDetailPage({
                                   initialPaidStatus={activity.cost_paid}
                                 />
                               )}
-                            <Button asChild variant="ghost" className="flex-1">
+                            <Button asChild variant="ghost" className="flex-1 min-h-[44px]">
                               <Link
                                 href={`/journeys/${id}/activities/${activity.id}/edit`}
                               >
