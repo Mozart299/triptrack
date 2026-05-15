@@ -37,8 +37,13 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .order('start_date', { ascending: false });
 
-  // Fetch active journey
-  const activeJourney = journeys?.find((j) => j.status === 'active');
+  // Fetch active journey based on dates
+  const now = new Date();
+  const activeJourney = journeys?.find((j) => {
+    const start = new Date(j.start_date);
+    const end = new Date(j.end_date);
+    return now >= start && now <= end;
+  });
 
   // Get stats for active journey
   let stats = null;

@@ -321,78 +321,82 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
                 />
               </div>
 
-              <div className="space-y-3">
-                <Label>Cost Split Type</Label>
-                <RadioGroup
-                  value={formData.costSplitType}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      costSplitType: value as CostSplitType,
-                    }))
-                  }
-                  className="space-y-2"
-                >
-                  <Label
-                    htmlFor="split-none"
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
-                  >
-                    <RadioGroupItem value="none" id="split-none" />
-                    <div>
-                      <div className="font-medium">No Split</div>
-                      <div className="text-sm text-muted-foreground">
-                        Single person or untracked cost
-                      </div>
-                    </div>
-                  </Label>
-                  <Label
-                    htmlFor="split-equal"
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
-                  >
-                    <RadioGroupItem value="equal" id="split-equal" />
-                    <div>
-                      <div className="font-medium">Split Equally</div>
-                      <div className="text-sm text-muted-foreground">
-                        Divide cost evenly among all participants
-                      </div>
-                    </div>
-                  </Label>
-                  <Label
-                    htmlFor="split-individual"
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
-                  >
-                    <RadioGroupItem value="individual" id="split-individual" />
-                    <div>
-                      <div className="font-medium">Individual Costs</div>
-                      <div className="text-sm text-muted-foreground">
-                        Set different costs for each participant
-                      </div>
-                    </div>
-                  </Label>
-                </RadioGroup>
-              </div>
+              {participants.length > 1 && (
+                <>
+                  <div className="space-y-3">
+                    <Label>Cost Split Type</Label>
+                    <RadioGroup
+                      value={formData.costSplitType}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          costSplitType: value as CostSplitType,
+                        }))
+                      }
+                      className="space-y-2"
+                    >
+                      <Label
+                        htmlFor="split-none"
+                        className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                      >
+                        <RadioGroupItem value="none" id="split-none" />
+                        <div>
+                          <div className="font-medium">No Split</div>
+                          <div className="text-sm text-muted-foreground">
+                            Single person or untracked cost
+                          </div>
+                        </div>
+                      </Label>
+                      <Label
+                        htmlFor="split-equal"
+                        className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                      >
+                        <RadioGroupItem value="equal" id="split-equal" />
+                        <div>
+                          <div className="font-medium">Split Equally</div>
+                          <div className="text-sm text-muted-foreground">
+                            Divide cost evenly among all participants
+                          </div>
+                        </div>
+                      </Label>
+                      <Label
+                        htmlFor="split-individual"
+                        className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                      >
+                        <RadioGroupItem value="individual" id="split-individual" />
+                        <div>
+                          <div className="font-medium">Individual Costs</div>
+                          <div className="text-sm text-muted-foreground">
+                            Set different costs for each participant
+                          </div>
+                        </div>
+                      </Label>
+                    </RadioGroup>
+                  </div>
 
-              {formData.costSplitType === 'equal' && (
-                <ParticipantSelector
-                  participants={participants}
-                  selectedParticipants={selectedParticipants}
-                  onChange={setSelectedParticipants}
-                  estimatedCost={
-                    formData.estimatedCost
-                      ? parseFloat(formData.estimatedCost)
-                      : undefined
-                  }
-                  currency={journeyCurrency}
-                />
-              )}
+                  {formData.costSplitType === 'equal' && (
+                    <ParticipantSelector
+                      participants={participants}
+                      selectedParticipants={selectedParticipants}
+                      onChange={setSelectedParticipants}
+                      estimatedCost={
+                        formData.estimatedCost
+                          ? parseFloat(formData.estimatedCost)
+                          : undefined
+                      }
+                      currency={journeyCurrency}
+                    />
+                  )}
 
-              {formData.costSplitType === 'individual' && (
-                <ParticipantCostInput
-                  participants={participants}
-                  costs={participantCosts}
-                  onChange={setParticipantCosts}
-                  currency={journeyCurrency}
-                />
+                  {formData.costSplitType === 'individual' && (
+                    <ParticipantCostInput
+                      participants={participants}
+                      costs={participantCosts}
+                      onChange={setParticipantCosts}
+                      currency={journeyCurrency}
+                    />
+                  )}
+                </>
               )}
 
               <div className="space-y-2">

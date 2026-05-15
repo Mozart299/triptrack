@@ -7,6 +7,7 @@ import {
   ListTodo,
   MapPin,
   Plane,
+  Plus,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import ActivityCheckIn from '@/components/features/ActivityCheckIn';
@@ -203,12 +204,20 @@ export default async function ActivitiesPage({
           <h1 className="text-2xl font-semibold tracking-tight">Activities</h1>
           <p className="mt-1 text-muted-foreground">{journey.title}</p>
         </div>
-        {journeys.length > 1 && (
-          <JourneySwitcher
-            journeys={journeys.map((j) => ({ id: j.id, title: j.title }))}
-            selectedJourneyId={journey.id}
-          />
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {journeys.length > 1 && (
+            <JourneySwitcher
+              journeys={journeys.map((j) => ({ id: j.id, title: j.title }))}
+              selectedJourneyId={journey.id}
+            />
+          )}
+          <Button asChild size="lg">
+            <Link href={`/journeys/${journey.id}/activities/new`}>
+              <Plus className="size-4" />
+              <span className="hidden sm:inline">Add Activity</span>
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -250,7 +259,7 @@ export default async function ActivitiesPage({
 
       {ongoing && ongoing.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3">Happening Now</h2>
+          <h2 className="text-lg font-semibold mb-3">Ready to Check In</h2>
           <div className="space-y-3">
             {ongoing.map((activity) => (
               <ActivityCheckIn
@@ -306,8 +315,14 @@ export default async function ActivitiesPage({
             <ListTodo className="mx-auto mb-4 size-10 text-muted-foreground" />
             <h3 className="text-lg font-semibold">No activities yet</h3>
             <p className="mt-2 text-muted-foreground">
-              Add activities to your journey to track them here
+              Add your first activity to start planning
             </p>
+            <Button asChild className="mt-6">
+              <Link href={`/journeys/${journey.id}/activities/new`}>
+                <Plus className="size-4" />
+                Add Activity
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       )}

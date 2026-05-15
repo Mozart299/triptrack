@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { CURRENCIES } from '@/lib/currency';
+import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,6 +90,7 @@ export default function JourneyForm({
 
         if (updateError) throw updateError;
 
+        toast.success('Journey updated');
         router.push(`/journeys/${journeyId}`);
       } else {
         const { data: journey, error: createError } = await supabase
@@ -118,6 +120,7 @@ export default function JourneyForm({
 
         if (participantError) throw participantError;
 
+        toast.success('Journey created');
         router.push(`/journeys/${journey.id}`);
       }
 

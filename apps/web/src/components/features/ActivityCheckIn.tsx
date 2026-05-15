@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { CalendarClock, Check, CircleDollarSign, MapPin } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Activity } from '@/types';
@@ -32,7 +33,9 @@ export default function ActivityCheckIn({
       .update({ completed_at: new Date().toISOString() })
       .eq('id', activity.id);
 
-    if (!error) {
+    if (error) {
+      toast.error('Failed to check in');
+    } else {
       router.refresh();
     }
     setLoading(false);
