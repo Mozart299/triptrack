@@ -49,7 +49,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="max-w-md w-full">
         <Card className="shadow-sm">
-          <CardHeader className="items-center text-center">
+          <CardHeader className="justify-items-center text-center">
             <div className="mb-2 flex size-11 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Plane className="size-5" />
             </div>
@@ -79,7 +79,15 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   type="password"

@@ -67,7 +67,7 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="max-w-md w-full">
         <Card className="shadow-sm">
-          <CardHeader className="items-center text-center">
+          <CardHeader className="justify-items-center text-center">
             <div className="mb-2 flex size-11 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Plane className="size-5" />
             </div>
