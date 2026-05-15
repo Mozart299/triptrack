@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AlertCircle, CheckCircle2, Plane } from 'lucide-react';
@@ -25,6 +25,13 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const router = useRouter();
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimer.current) clearTimeout(redirectTimer.current);
+    };
+  }, []);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,8 +57,7 @@ export default function SignupPage() {
     } else {
       setMessage('Account created! Check your email to confirm your account.');
       setLoading(false);
-      // Redirect to login after 3 seconds
-      setTimeout(() => {
+      redirectTimer.current = setTimeout(() => {
         router.push('/login');
       }, 3000);
     }

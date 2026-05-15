@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
-import { LayoutDashboard, LogOut, MapPin, Plane } from 'lucide-react';
+import { LayoutDashboard, LogOut, MapPin, Plane, User as UserIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -27,6 +27,7 @@ export default function Navigation({ user }: NavigationProps) {
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/journeys', label: 'Journeys', icon: Plane },
     { href: '/activities', label: 'Activities', icon: MapPin },
+    { href: '/profile', label: 'Profile', icon: UserIcon },
   ];
 
   return (
@@ -73,6 +74,12 @@ export default function Navigation({ user }: NavigationProps) {
                   {user.email}
                 </div>
               </div>
+              <Button asChild variant="ghost" size="lg">
+                <Link href="/profile">
+                  <UserIcon className="size-4" />
+                  Profile
+                </Link>
+              </Button>
               <Button onClick={handleSignOut} variant="outline" size="lg">
                 <LogOut className="size-4" />
                 Sign Out
@@ -100,13 +107,6 @@ export default function Navigation({ user }: NavigationProps) {
               <span className="text-xs font-medium">{item.label}</span>
             </Link>
           ))}
-          <button
-            onClick={handleSignOut}
-            className="flex min-h-[56px] flex-col items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <LogOut className="mb-1 size-5" />
-            <span className="text-xs font-medium">Sign Out</span>
-          </button>
         </div>
       </div>
     </>

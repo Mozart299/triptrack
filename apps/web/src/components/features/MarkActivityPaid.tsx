@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, CircleDollarSign } from 'lucide-react';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 
@@ -30,7 +31,9 @@ export default function MarkActivityPaid({
       .update({ cost_paid: !isPaid })
       .eq('id', activityId);
 
-    if (!error) {
+    if (error) {
+      toast.error('Failed to update');
+    } else {
       setIsPaid(!isPaid);
       router.refresh();
     }

@@ -81,6 +81,13 @@ export function getCurrencyName(code: string): string {
  * @returns Formatted string (e.g., '$123.45', '€99.99')
  */
 export function formatCurrency(amount: number, currencyCode: string): string {
-  const symbol = getCurrencySymbol(currencyCode);
-  return `${symbol}${amount.toFixed(2)}`;
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyCode,
+    }).format(amount);
+  } catch {
+    const symbol = getCurrencySymbol(currencyCode);
+    return `${symbol}${amount.toFixed(2)}`;
+  }
 }

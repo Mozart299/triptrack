@@ -19,6 +19,7 @@ import type { JourneyParticipant, Profile } from '@/types';
 type ParticipantWithProfile = JourneyParticipant & {
   profiles: Profile | null;
 };
+import DeleteActivityButton from '@/components/features/DeleteActivityButton';
 import DeleteJourneyButton from '@/components/features/DeleteJourneyButton';
 import ActivityCostBreakdown from '@/components/features/ActivityCostBreakdown';
 import JourneyParticipantCostSummary from '@/components/features/JourneyParticipantCostSummary';
@@ -341,6 +342,7 @@ export default async function JourneyDetailPage({
                                 Edit
                               </Link>
                             </Button>
+                            <DeleteActivityButton activityId={activity.id} />
                           </div>
                         </CardContent>
                       </Card>

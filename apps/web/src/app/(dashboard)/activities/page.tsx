@@ -12,7 +12,10 @@ import { createClient } from '@/lib/supabase/server';
 import ActivityCheckIn from '@/components/features/ActivityCheckIn';
 import ActivityActions from '@/components/features/ActivityActions';
 import ActivityCostBreakdown from '@/components/features/ActivityCostBreakdown';
+import DeleteActivityButton from '@/components/features/DeleteActivityButton';
+import JourneySwitcher from '@/components/features/JourneySwitcher';
 import MarkActivityPaid from '@/components/features/MarkActivityPaid';
+import UndoCheckIn from '@/components/features/UndoCheckIn';
 import { formatCurrency } from '@/lib/currency';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,7 +23,13 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ActivitiesPage() {
+interface ActivitiesPageProps {
+  searchParams: Promise<{ journey?: string }>;
+}
+
+export default async function ActivitiesPage({
+  searchParams,
+}: ActivitiesPageProps) {
   const supabase = await createClient();
 
   const {
@@ -31,15 +40,14 @@ export default async function ActivitiesPage() {
     redirect('/login');
   }
 
+  const { journey: journeyParam } = await searchParams;
+
   const { data: journeys } = await supabase
     .from('journeys')
     .select('*')
-    .order('start_date', { ascending: false })
-    .limit(1);
+    .order('start_date', { ascending: false });
 
-  const journey = journeys?.[0];
-
-  if (!journey) {
+  if (!journeys || journeys.length === 0) {
     return (
       <div className="container-app py-8">
         <Card className="text-center">
@@ -57,6 +65,10 @@ export default async function ActivitiesPage() {
       </div>
     );
   }
+
+  const journey =
+    (journeyParam && journeys.find((j) => j.id === journeyParam)) ||
+    journeys[0];
 
   const { data: activities } = await supabase
     .from('activities')
@@ -171,7 +183,14 @@ export default async function ActivitiesPage() {
               initialPaidStatus={activity.cost_paid}
             />
           )}
-          <ActivityActions activityId={activity.id} journeyId={journey.id} />
+          {completedItem ? (
+            <>
+              <UndoCheckIn activityId={activity.id} />
+              <DeleteActivityButton activityId={activity.id} />
+            </>
+          ) : (
+            <ActivityActions activityId={activity.id} journeyId={journey.id} />
+          )}
         </div>
       </CardContent>
     </Card>
@@ -179,9 +198,17 @@ export default async function ActivitiesPage() {
 
   return (
     <div className="container-app py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Activities</h1>
-        <p className="mt-1 text-muted-foreground">{journey.title}</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Activities</h1>
+          <p className="mt-1 text-muted-foreground">{journey.title}</p>
+        </div>
+        {journeys.length > 1 && (
+          <JourneySwitcher
+            journeys={journeys.map((j) => ({ id: j.id, title: j.title }))}
+            selectedJourneyId={journey.id}
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">

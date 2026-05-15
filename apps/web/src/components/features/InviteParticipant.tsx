@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { CheckCircle2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -22,6 +23,7 @@ interface InviteProps {
 
 export default function InviteParticipant({ journeyId }: InviteProps) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{
@@ -84,10 +86,10 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
 
       setEmail('');
 
-      // Close modal after 2 seconds and refresh page
+      // Close modal after 2 seconds and refresh
       setTimeout(() => {
         setOpen(false);
-        window.location.reload();
+        router.refresh();
       }, 2000);
     } catch (err: unknown) {
       console.error('Invitation error:', err);
