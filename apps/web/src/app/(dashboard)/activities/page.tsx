@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ListTodo, Plane, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import ActivityCheckIn from '@/components/features/ActivityCheckIn';
+import ActivityFilters from '@/components/features/ActivityFilters';
 import ActivityRow from '@/components/features/ActivityRow';
 import JourneySwitcher from '@/components/features/JourneySwitcher';
 import { formatCurrency } from '@/lib/currency';
@@ -12,7 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 export const dynamic = 'force-dynamic';
 
 interface ActivitiesPageProps {
-  searchParams: Promise<{ journey?: string }>;
+  searchParams: Promise<{ journey?: string; search?: string; category?: string }>;
 }
 
 export default async function ActivitiesPage({
@@ -28,7 +29,7 @@ export default async function ActivitiesPage({
     redirect('/login');
   }
 
-  const { journey: journeyParam } = await searchParams;
+  const { journey: journeyParam, search, category } = await searchParams;
 
   const { data: journeys } = await supabase
     .from('journeys')
@@ -58,11 +59,16 @@ export default async function ActivitiesPage({
     (journeyParam && journeys.find((j) => j.id === journeyParam)) ||
     journeys[0];
 
-  const { data: activities } = await supabase
+  let activitiesQuery = supabase
     .from('activities')
     .select('*')
     .eq('journey_id', journey.id)
     .order('scheduled_at', { ascending: true });
+
+  if (search) activitiesQuery = activitiesQuery.ilike('title', `%${search}%`);
+  if (category) activitiesQuery = activitiesQuery.eq('category', category);
+
+  const { data: activities } = await activitiesQuery;
 
   const now = new Date();
 
@@ -143,6 +149,8 @@ export default async function ActivitiesPage({
           </CardContent>
         </Card>
       </div>
+
+      <ActivityFilters journeyId={journey.id} />
 
       {ongoing && ongoing.length > 0 && (
         <div className="mb-6">

@@ -44,8 +44,7 @@ export default function DeleteJourneyButton({
       toast.success('Journey deleted');
       router.push('/journeys');
       router.refresh();
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast.error('Error deleting journey');
       setIsDeleting(false);
     }

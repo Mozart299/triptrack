@@ -19,6 +19,7 @@ import type { JourneyParticipant, Profile } from '@/types';
 type ParticipantWithProfile = JourneyParticipant & {
   profiles: Profile | null;
 };
+import CheckInButton from '@/components/features/CheckInButton';
 import DeleteActivityButton from '@/components/features/DeleteActivityButton';
 import DeleteJourneyButton from '@/components/features/DeleteJourneyButton';
 import ActivityCostBreakdown from '@/components/features/ActivityCostBreakdown';
@@ -333,6 +334,11 @@ export default async function JourneyDetailPage({
                                   activityId={activity.id}
                                   initialPaidStatus={activity.cost_paid}
                                 />
+                              )}
+                            {!activity.completed_at &&
+                              activity.scheduled_at &&
+                              new Date(activity.scheduled_at) <= today && (
+                                <CheckInButton activityId={activity.id} />
                               )}
                             <Button asChild variant="ghost" className="flex-1 min-h-[44px]">
                               <Link

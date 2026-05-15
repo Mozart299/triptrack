@@ -92,7 +92,6 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
         router.refresh();
       }, 2000);
     } catch (err: unknown) {
-      console.error('Invitation error:', err);
       setMessage({
         text: isErrorWithMessage(err)
           ? err.message

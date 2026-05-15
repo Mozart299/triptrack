@@ -11,7 +11,6 @@ export async function middleware(request: NextRequest) {
 
   // If env vars are not set, just pass through without auth
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase credentials not configured in middleware');
     return supabaseResponse;
   }
 

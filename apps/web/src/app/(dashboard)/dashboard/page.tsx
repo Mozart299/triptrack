@@ -4,8 +4,10 @@ import {
   ArrowRight,
   CalendarDays,
   CheckCircle2,
+  ListTodo,
   MapPin,
   Plane,
+  Users,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/badge';
@@ -129,18 +131,46 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="mb-6 text-center">
+        <Card className="mb-6">
           <CardContent className="py-10">
             <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg bg-secondary text-primary">
               <Plane className="size-6" />
             </div>
-            <h3 className="text-lg font-semibold">No active journey</h3>
-            <p className="mt-2 text-muted-foreground">
-              Create your first journey to start tracking
+            <h3 className="text-center text-lg font-semibold">
+              {journeys && journeys.length > 0
+                ? 'No trip in progress'
+                : 'Welcome to TripTrack'}
+            </h3>
+            <p className="mt-2 text-center text-muted-foreground">
+              {journeys && journeys.length > 0
+                ? 'None of your journeys are active right now.'
+                : 'Plan trips, track activities, and split costs with your travel crew.'}
             </p>
-            <Button asChild className="mt-5">
-              <Link href="/journeys/new">Create Journey</Link>
-            </Button>
+
+            {(!journeys || journeys.length === 0) && (
+              <div className="mx-auto mt-8 grid max-w-sm grid-cols-1 gap-3">
+                {[
+                  { icon: Plane, text: 'Create a journey with dates and destination' },
+                  { icon: ListTodo, text: 'Add activities — restaurants, tours, transport' },
+                  { icon: Users, text: 'Invite friends and split costs automatically' },
+                ].map(({ icon: Icon, text }) => (
+                  <div key={text} className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
+                      <Icon className="size-4" />
+                    </div>
+                    {text}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-center">
+              <Button asChild>
+                <Link href="/journeys/new">
+                  {journeys && journeys.length > 0 ? 'Plan a New Journey' : 'Create Your First Journey'}
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -187,8 +217,8 @@ export default async function DashboardPage() {
                     </p>
                     <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                       <CalendarDays className="size-3.5" />
-                      {new Date(journey.start_date).toLocaleDateString()} -{' '}
-                      {new Date(journey.end_date).toLocaleDateString()}
+                      {new Date(journey.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} -{' '}
+                      {new Date(journey.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                   </div>
                   <Badge
