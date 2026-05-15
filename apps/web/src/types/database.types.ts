@@ -240,6 +240,29 @@ export interface Database {
           notes?: string | null
         }
       }
+      pending_invites: {
+        Row: {
+          id: string
+          created_at: string
+          token: string
+          journey_id: string
+          invitee_email: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          token: string
+          journey_id: string
+          invitee_email: string
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          token?: string
+          journey_id?: string
+          invitee_email?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

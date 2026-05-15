@@ -46,7 +46,7 @@ export default function ActivityCostBreakdown({
 
       if (data) {
         const formattedCosts = (
-          data as ActivityParticipantCostWithProfile[]
+          data as unknown as ActivityParticipantCostWithProfile[]
         ).map((cost) => ({
           user_id: cost.user_id,
           amount: cost.amount,

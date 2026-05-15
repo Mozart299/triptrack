@@ -14,7 +14,11 @@ import {
 } from 'lucide-react';
 import InviteParticipant from '@/components/features/InviteParticipant';
 import { createClient } from '@/lib/supabase/server';
-import type { Profile } from '@/types';
+import type { JourneyParticipant, Profile } from '@/types';
+
+type ParticipantWithProfile = JourneyParticipant & {
+  profiles: Profile | null;
+};
 import DeleteJourneyButton from '@/components/features/DeleteJourneyButton';
 import ActivityCostBreakdown from '@/components/features/ActivityCostBreakdown';
 import JourneyParticipantCostSummary from '@/components/features/JourneyParticipantCostSummary';
@@ -64,7 +68,7 @@ export default async function JourneyDetailPage({
     notFound();
   }
 
-  const [{ data: activities }, { data: participants }] = await Promise.all([
+  const [{ data: activities }, { data: participantsData }] = await Promise.all([
     supabase
       .from('activities')
       .select('*')
@@ -79,12 +83,15 @@ export default async function JourneyDetailPage({
           id,
           email,
           full_name,
-          avatar_url
+          avatar_url,
+          created_at,
+          updated_at
         )
       `,
       )
       .eq('journey_id', id),
   ]);
+  const participants = (participantsData ?? []) as ParticipantWithProfile[];
 
   const isOwner = journey.user_id === user.id;
   const completedActivities =
@@ -369,8 +376,7 @@ export default async function JourneyDetailPage({
                 <>
                   <div className="space-y-3 mb-6">
                     {participants.map((participant) => {
-                      const profile =
-                        participant.profiles as unknown as Profile;
+                      const profile = participant.profiles;
 
                       return (
                         <div
@@ -401,9 +407,9 @@ export default async function JourneyDetailPage({
                   <div>
                     <JourneyParticipantCostSummary
                       journeyId={id}
-                      participants={participants.map(
-                        (p) => p.profiles as unknown as Profile,
-                      )}
+                      participants={participants
+                        .map((p) => p.profiles)
+                        .filter((p): p is Profile => p !== null)}
                       currency={journey.currency}
                     />
                   </div>
