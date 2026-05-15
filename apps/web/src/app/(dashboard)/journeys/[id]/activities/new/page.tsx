@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { Profile, CostSplitType, JourneyParticipantProfile } from '@/types';
-import ParticipantCostInput from '@/components/features/ParticipantCostInput';
-import ParticipantSelector from '@/components/features/ParticipantSelector';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Profile, JourneyParticipantProfile } from '@/types';
+import ActivityForm, {
+  ActivityFormData,
+  ParticipantCost,
+  defaultActivityFormData,
+} from '@/components/features/ActivityForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -17,28 +19,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 
 interface NewActivityPageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
-interface ParticipantCost {
-  userId: string;
-  amount: number;
-  notes?: string;
+  params: Promise<{ id: string }>;
 }
 
 export default function NewActivityPage({ params }: NewActivityPageProps) {
@@ -47,97 +30,52 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [journeyId, setJourneyId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<Profile[]>([]);
-  const [journeyCurrency, setJourneyCurrency] = useState<string>('USD');
+  const [journeyCurrency, setJourneyCurrency] = useState('USD');
 
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    location: '',
-    scheduledAt: '',
-    category: 'other' as
-      | 'transport'
-      | 'accommodation'
-      | 'dining'
-      | 'sightseeing'
-      | 'entertainment'
-      | 'other',
-    estimatedCost: '',
-    notes: '',
-    costSplitType: 'none' as CostSplitType,
-  });
-
-  const [participantCosts, setParticipantCosts] = useState<ParticipantCost[]>(
-    [],
-  );
-  const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
-    [],
-  );
-
-  // Unwrap params on mount and fetch journey data
   useEffect(() => {
     params.then(async (p) => {
       setJourneyId(p.id);
-
       const supabase = createClient();
 
-      // Fetch journey to get currency
-      const { data: journey } = await supabase
-        .from('journeys')
-        .select('currency')
-        .eq('id', p.id)
-        .single();
+      const [{ data: journey }, { data: participantsData }] = await Promise.all([
+        supabase.from('journeys').select('currency').eq('id', p.id).single(),
+        supabase.rpc('get_journey_participants', { p_journey_id: p.id }),
+      ]);
 
-      if (journey) {
-        setJourneyCurrency(journey.currency);
-      }
-
-      // Fetch participants
-      const { data: participantsData } = await supabase.rpc(
-        'get_journey_participants',
-        { p_journey_id: p.id },
-      );
+      if (journey) setJourneyCurrency(journey.currency);
 
       if (participantsData) {
-        // Map to Profile format, using user_id as id
-        const mappedParticipants = (
-          participantsData as JourneyParticipantProfile[]
-        ).map((p) => ({
-          id: p.user_id,
-          email: p.email || '',
-          full_name: p.full_name,
-          avatar_url: p.avatar_url,
-          created_at: '',
-          updated_at: '',
-        }));
-        setParticipants(mappedParticipants);
+        setParticipants(
+          (participantsData as JourneyParticipantProfile[]).map((p) => ({
+            id: p.user_id,
+            email: p.email || '',
+            full_name: p.full_name,
+            avatar_url: p.avatar_url,
+            created_at: '',
+            updated_at: '',
+          })),
+        );
       }
     });
   }, [params]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (
+    formData: ActivityFormData,
+    participantCosts: ParticipantCost[],
+    selectedParticipants: string[],
+  ) => {
+    if (!journeyId) return;
     setLoading(true);
     setError(null);
 
-    if (!journeyId) {
-      setError('Journey ID not found');
-      setLoading(false);
-      return;
-    }
-
     const supabase = createClient();
-
-    // Get current user
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setError('You must be logged in to create an activity');
       setLoading(false);
       return;
     }
 
-    // Create activity
     const { data: activity, error: activityError } = await supabase
       .from('activities')
       .insert({
@@ -167,19 +105,18 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
       return;
     }
 
-    // If individual cost split, save participant costs
     if (
       formData.costSplitType === 'individual' &&
       activity &&
       participantCosts.length > 0
     ) {
       const costsToInsert = participantCosts
-        .filter((cost) => cost.amount > 0)
-        .map((cost) => ({
+        .filter((c) => c.amount > 0)
+        .map((c) => ({
           activity_id: activity.id,
-          user_id: cost.userId,
-          amount: cost.amount,
-          notes: cost.notes || null,
+          user_id: c.userId,
+          amount: c.amount,
+          notes: c.notes || null,
         }));
 
       if (costsToInsert.length > 0) {
@@ -188,27 +125,15 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
           .insert(costsToInsert);
 
         if (costsError) {
-          setError(
-            `Activity created but failed to save participant costs: ${costsError.message}`,
-          );
+          setError(`Activity created but failed to save costs: ${costsError.message}`);
           setLoading(false);
           return;
         }
       }
     }
 
-    // Redirect to journey page
     router.push(`/journeys/${journeyId}`);
     router.refresh();
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
   };
 
   if (!journeyId) {
@@ -221,7 +146,7 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
 
   return (
     <div className="container-app py-6">
-      <div className="max-w-2xl mx-auto">
+      <div className="mx-auto max-w-2xl">
         <Button asChild variant="ghost" className="mb-6 px-0">
           <Link href={`/journeys/${journeyId}`}>
             <ArrowLeft className="size-4" />
@@ -237,211 +162,16 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="title">Activity Name *</Label>
-                <Input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  placeholder="Museum visit"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  type="text"
-                  id="location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="City center"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="scheduledAt">Scheduled Date & Time</Label>
-                  <Input
-                    type="datetime-local"
-                    id="scheduledAt"
-                    name="scheduledAt"
-                    value={formData.scheduledAt}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        category: value as typeof formData.category,
-                      }))
-                    }
-                  >
-                    <SelectTrigger id="category">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="other">Other</SelectItem>
-                      <SelectItem value="transport">Transport</SelectItem>
-                      <SelectItem value="accommodation">Accommodation</SelectItem>
-                      <SelectItem value="dining">Dining</SelectItem>
-                      <SelectItem value="sightseeing">Sightseeing</SelectItem>
-                      <SelectItem value="entertainment">Entertainment</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="estimatedCost">Estimated Cost</Label>
-                <Input
-                  type="number"
-                  id="estimatedCost"
-                  name="estimatedCost"
-                  value={formData.estimatedCost}
-                  onChange={handleChange}
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-
-              {participants.length > 1 && (
-                <>
-                  <div className="space-y-3">
-                    <Label>Cost Split Type</Label>
-                    <RadioGroup
-                      value={formData.costSplitType}
-                      onValueChange={(value) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          costSplitType: value as CostSplitType,
-                        }))
-                      }
-                      className="space-y-2"
-                    >
-                      <Label
-                        htmlFor="split-none"
-                        className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
-                      >
-                        <RadioGroupItem value="none" id="split-none" />
-                        <div>
-                          <div className="font-medium">No Split</div>
-                          <div className="text-sm text-muted-foreground">
-                            Single person or untracked cost
-                          </div>
-                        </div>
-                      </Label>
-                      <Label
-                        htmlFor="split-equal"
-                        className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
-                      >
-                        <RadioGroupItem value="equal" id="split-equal" />
-                        <div>
-                          <div className="font-medium">Split Equally</div>
-                          <div className="text-sm text-muted-foreground">
-                            Divide cost evenly among all participants
-                          </div>
-                        </div>
-                      </Label>
-                      <Label
-                        htmlFor="split-individual"
-                        className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
-                      >
-                        <RadioGroupItem value="individual" id="split-individual" />
-                        <div>
-                          <div className="font-medium">Individual Costs</div>
-                          <div className="text-sm text-muted-foreground">
-                            Set different costs for each participant
-                          </div>
-                        </div>
-                      </Label>
-                    </RadioGroup>
-                  </div>
-
-                  {formData.costSplitType === 'equal' && (
-                    <ParticipantSelector
-                      participants={participants}
-                      selectedParticipants={selectedParticipants}
-                      onChange={setSelectedParticipants}
-                      estimatedCost={
-                        formData.estimatedCost
-                          ? parseFloat(formData.estimatedCost)
-                          : undefined
-                      }
-                      currency={journeyCurrency}
-                    />
-                  )}
-
-                  {formData.costSplitType === 'individual' && (
-                    <ParticipantCostInput
-                      participants={participants}
-                      costs={participantCosts}
-                      onChange={setParticipantCosts}
-                      currency={journeyCurrency}
-                    />
-                  )}
-                </>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows={3}
-                  placeholder="What are you planning to do?"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  rows={2}
-                  placeholder="Any additional notes..."
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 min-h-[44px]"
-                  size="lg"
-                >
-                  {loading ? 'Adding...' : 'Add Activity'}
-                </Button>
-                <Button
-                  asChild
-                  variant="secondary"
-                  className="flex-1 min-h-[44px]"
-                  size="lg"
-                >
-                  <Link href={`/journeys/${journeyId}`}>Cancel</Link>
-                </Button>
-              </div>
-            </form>
+            <ActivityForm
+              initialData={defaultActivityFormData}
+              participants={participants}
+              currency={journeyCurrency}
+              loading={loading}
+              error={error}
+              cancelHref={`/journeys/${journeyId}`}
+              submitLabel="Add Activity"
+              onSubmit={handleSubmit}
+            />
           </CardContent>
         </Card>
       </div>
