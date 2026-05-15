@@ -13,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 
 export default function ResetPasswordPage() {
@@ -79,9 +79,8 @@ export default function ResetPasswordPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="password">New password</Label>
-                  <Input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
@@ -96,9 +95,8 @@ export default function ResetPasswordPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="confirm">Confirm password</Label>
-                  <Input
+                  <PasswordInput
                     id="confirm"
-                    type="password"
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     placeholder="••••••••"
