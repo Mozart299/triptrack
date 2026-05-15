@@ -1,6 +1,6 @@
 # TripTrack
 
-A mobile-first trip tracking and expense management app built for your Nairobi adventure starting Dec 24th.
+A trip tracking and expense management web app built for any adventure.
 
 ## Features
 
@@ -124,14 +124,14 @@ npx nx build web
 npx nx graph
 ```
 
-## MVP Scope (For Nairobi Trip - Dec 24th)
+## MVP Scope
 
 1. **Authentication**
    - Sign up / Sign in with email
    - Profile management
 
 2. **Journey Management**
-   - Create journey for Nairobi
+   - Create journeys for any destination
    - View journey details
    - Update journey status
 

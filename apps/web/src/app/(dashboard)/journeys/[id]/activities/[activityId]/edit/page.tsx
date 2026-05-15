@@ -323,7 +323,7 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
                 value={formData.title}
                 onChange={handleChange}
                 className="input-field"
-                placeholder="Safari Tour"
+                placeholder="Museum visit"
                 required
               />
             </div>
@@ -342,7 +342,7 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
                 value={formData.location}
                 onChange={handleChange}
                 className="input-field"
-                placeholder="Nairobi National Park"
+                placeholder="City center"
               />
             </div>
 

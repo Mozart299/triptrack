@@ -1,6 +1,16 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { CalendarDays, Clock, MapPin, Plane, Plus, Users } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 export default async function JourneysPage() {
   const supabase = await createClient();
@@ -12,33 +22,31 @@ export default async function JourneysPage() {
   if (!user) {
     redirect('/login');
   }
-  
+
   const { data: journeys } = await supabase
     .from('journeys')
     .select('*')
     .order('start_date', { ascending: false });
 
   return (
-    <div className="container-app py-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="container-app py-8">
+      <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
-            My Journeys
-          </h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-semibold tracking-tight">My Journeys</h1>
+          <p className="mt-1 text-muted-foreground">
             All your trips in one place
           </p>
         </div>
-        <Link
-          href="/journeys/new"
-          className="btn-primary"
-        >
-          + New Journey
-        </Link>
+        <Button asChild size="lg">
+          <Link href="/journeys/new">
+            <Plus className="size-4" />
+            New Journey
+          </Link>
+        </Button>
       </div>
 
       {journeys && journeys.length > 0 ? (
-        <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
           {journeys.map((journey) => {
             const startDate = new Date(journey.start_date);
             const endDate = new Date(journey.end_date);
@@ -46,34 +54,52 @@ export default async function JourneysPage() {
             const isActive = today >= startDate && today <= endDate;
             const isCompleted = today > endDate;
             const daysUntil = Math.ceil(
-              (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+              (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
             );
-            
+
             // Check ownership for the UI badge
             const isOwner = journey.user_id === user.id;
 
             return (
-              <Link
+              <Card
                 key={journey.id}
-                href={`/journeys/${journey.id}`}
-                className="card hover:shadow-lg transition-shadow block relative overflow-hidden"
+                className="transition-colors hover:bg-accent/50"
               >
-                {/* Optional: Visual indicator for shared journeys */}
-                {!isOwner && (
-                  <div className="absolute top-0 right-0 bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-bl-lg font-medium">
-                    Shared with you
-                  </div>
-                )}
-
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 pr-8"> {/* Added padding-right for the badge space */}
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">
-                      {journey.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-2">
-                      📍 {journey.destination}
-                    </p>
-                    <p className="text-xs text-gray-500">
+                <Link href={`/journeys/${journey.id}`} className="block">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <CardTitle className="text-lg">
+                          {journey.title}
+                        </CardTitle>
+                        <CardDescription className="mt-2 flex items-center gap-1.5">
+                          <MapPin className="size-3.5" />
+                          {journey.destination}
+                        </CardDescription>
+                      </div>
+                      <Badge
+                        variant={isActive ? 'default' : 'secondary'}
+                        className={
+                          isCompleted ? 'bg-muted text-muted-foreground' : ''
+                        }
+                      >
+                        {isActive
+                          ? 'Active'
+                          : isCompleted
+                            ? 'Completed'
+                            : 'Planning'}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {!isOwner && (
+                      <Badge variant="outline" className="gap-1">
+                        <Users className="size-3" />
+                        Shared with you
+                      </Badge>
+                    )}
+                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <CalendarDays className="size-3.5" />
                       {startDate.toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
@@ -86,66 +112,46 @@ export default async function JourneysPage() {
                         year: 'numeric',
                       })}
                     </p>
-                  </div>
-                  
-                  {/* Status Badge */}
-                  <div className="flex flex-col items-end gap-2">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        isActive
-                          ? 'bg-green-100 text-green-700'
-                          : isCompleted
-                          ? 'bg-gray-100 text-gray-700'
-                          : 'bg-blue-100 text-blue-700'
-                      }`}
-                    >
-                      {isActive
-                        ? 'Active'
-                        : isCompleted
-                        ? 'Completed'
-                        : 'Planning'}
-                    </span>
-                  </div>
-                </div>
 
-                {journey.description && (
-                  <p className="text-sm text-gray-600 mb-3">
-                    {journey.description}
-                  </p>
-                )}
+                    {journey.description && (
+                      <p className="text-sm text-muted-foreground">
+                        {journey.description}
+                      </p>
+                    )}
 
-                {!isCompleted && !isActive && daysUntil > 0 && (
-                  <div className="bg-primary-50 px-3 py-2 rounded-lg">
-                    <p className="text-sm text-primary-700">
-                      🕒 Starts in {daysUntil} day{daysUntil !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                )}
+                    {!isCompleted && !isActive && daysUntil > 0 && (
+                      <div className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2 text-sm text-secondary-foreground">
+                        <Clock className="size-4" />
+                        Starts in {daysUntil} day{daysUntil !== 1 ? 's' : ''}
+                      </div>
+                    )}
 
-                {isActive && (
-                  <div className="bg-green-50 px-3 py-2 rounded-lg">
-                    <p className="text-sm text-green-700">
-                      ✨ Trip is happening now!
-                    </p>
-                  </div>
-                )}
-              </Link>
+                    {isActive && (
+                      <div className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
+                        Trip is happening now
+                      </div>
+                    )}
+                  </CardContent>
+                </Link>
+              </Card>
             );
           })}
         </div>
       ) : (
-        <div className="text-center py-16">
-          <div className="text-6xl mb-4">✈️</div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            No journeys yet
-          </h3>
-          <p className="text-gray-600 mb-6">
-            Create your first journey to start tracking your adventure
-          </p>
-          <Link href="/journeys/new" className="btn-primary inline-block">
-            Create Your First Journey
-          </Link>
-        </div>
+        <Card className="text-center">
+          <CardContent className="py-16">
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg bg-secondary text-primary">
+              <Plane className="size-6" />
+            </div>
+            <h3 className="text-xl font-semibold">No journeys yet</h3>
+            <p className="mt-2 text-muted-foreground">
+              Create your first journey to start tracking your adventure
+            </p>
+            <Button asChild className="mt-6">
+              <Link href="/journeys/new">Create Your First Journey</Link>
+            </Button>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

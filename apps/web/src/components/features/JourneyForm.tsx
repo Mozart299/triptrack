@@ -138,7 +138,7 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
           value={formData.title}
           onChange={handleChange}
           className="input-field"
-          placeholder="Nairobi Adventure"
+          placeholder="Summer in Lisbon"
           required
         />
       </div>
@@ -154,7 +154,7 @@ export default function JourneyForm({ initialData, journeyId }: JourneyFormProps
           value={formData.destination}
           onChange={handleChange}
           className="input-field"
-          placeholder="Nairobi, Kenya"
+          placeholder="Lisbon, Portugal"
           required
         />
       </div>

@@ -3,7 +3,10 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
+import { LayoutDashboard, LogOut, MapPin, Plane } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface NavigationProps {
   user: User;
@@ -21,74 +24,87 @@ export default function Navigation({ user }: NavigationProps) {
   };
 
   const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: '🏠' },
-    { href: '/journeys', label: 'Journeys', icon: '✈️' },
-    { href: '/activities', label: 'Activities', icon: '📍' },
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/journeys', label: 'Journeys', icon: Plane },
+    { href: '/activities', label: 'Activities', icon: MapPin },
   ];
 
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="hidden md:block bg-white border-b border-gray-200 sticky top-0 z-50">
+      <nav className="sticky top-0 z-50 hidden border-b bg-background/85 backdrop-blur md:block">
         <div className="container-app">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <Link href="/dashboard" className="text-xl font-bold text-primary-600">
+            <div className="flex items-center gap-8">
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 text-lg font-semibold text-foreground"
+              >
+                <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <Plane className="size-4" />
+                </span>
                 TripTrack
               </Link>
-              <div className="flex space-x-4">
+              <div className="flex items-center gap-1">
                 {navItems.map((item) => (
-                  <Link
+                  <Button
                     key={item.href}
-                    href={item.href}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      pathname === item.href
-                        ? 'bg-primary-100 text-primary-700'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                    asChild
+                    variant={pathname === item.href ? 'secondary' : 'ghost'}
+                    size="lg"
                   >
-                    {item.label}
-                  </Link>
+                    <Link
+                      href={item.href}
+                      className={cn(pathname === item.href && 'text-primary')}
+                    >
+                      <item.icon className="size-4" />
+                      {item.label}
+                    </Link>
+                  </Button>
                 ))}
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                {user.user_metadata?.full_name || user.email}
-              </span>
-              <button
-                onClick={handleSignOut}
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <div className="text-sm font-medium leading-none">
+                  {user.user_metadata?.full_name || 'Traveler'}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {user.email}
+                </div>
+              </div>
+              <Button onClick={handleSignOut} variant="outline" size="lg">
+                <LogOut className="size-4" />
                 Sign Out
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       </nav>
 
       {/* Mobile Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur md:hidden">
         <div className="grid grid-cols-4 gap-1 p-2">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center p-3 rounded-lg transition-colors ${
+              className={cn(
+                'flex min-h-[56px] flex-col items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors',
                 pathname === item.href
-                  ? 'bg-primary-100 text-primary-700'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
+                  ? 'bg-secondary text-primary'
+                  : 'hover:bg-muted hover:text-foreground',
+              )}
             >
-              <span className="text-2xl mb-1">{item.icon}</span>
+              <item.icon className="mb-1 size-5" />
               <span className="text-xs font-medium">{item.label}</span>
             </Link>
           ))}
           <button
             onClick={handleSignOut}
-            className="flex flex-col items-center justify-center p-3 rounded-lg transition-colors text-gray-600 hover:bg-gray-100 active:bg-gray-200"
+            className="flex min-h-[56px] flex-col items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            <span className="text-2xl mb-1">👋</span>
+            <LogOut className="mb-1 size-5" />
             <span className="text-xs font-medium">Sign Out</span>
           </button>
         </div>
