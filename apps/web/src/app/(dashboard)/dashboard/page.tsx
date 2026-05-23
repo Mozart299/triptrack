@@ -10,6 +10,7 @@ import {
   Users,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import type { Activity } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,17 +47,36 @@ export default async function DashboardPage() {
     const end = new Date(j.end_date);
     return now >= start && now <= end;
   });
+  const nextJourney = journeys
+    ?.filter((j) => new Date(j.start_date) > now)
+    .sort(
+      (a, b) =>
+        new Date(a.start_date).getTime() - new Date(b.start_date).getTime(),
+    )[0];
+  const featuredJourney = activeJourney || nextJourney;
 
-  // Get stats for active journey
+  // Get stats for the most relevant journey
   let stats = null;
-  if (activeJourney) {
+  let todayActivities: Activity[] = [];
+  if (featuredJourney) {
     const activitiesResult = await supabase
       .from('activities')
       .select('*')
-      .eq('journey_id', activeJourney.id);
+      .eq('journey_id', featuredJourney.id);
 
     const completedActivities =
       activitiesResult.data?.filter((a) => a.completed_at)?.length || 0;
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(now);
+    endOfToday.setHours(23, 59, 59, 999);
+
+    todayActivities =
+      activitiesResult.data?.filter((activity) => {
+        if (!activity.scheduled_at || activity.completed_at) return false;
+        const scheduledAt = new Date(activity.scheduled_at);
+        return scheduledAt >= startOfToday && scheduledAt <= endOfToday;
+      }) || [];
 
     stats = {
       totalActivities: activitiesResult.data?.length || 0,
@@ -77,6 +97,8 @@ export default async function DashboardPage() {
           <p className="mt-2 text-muted-foreground">
             {activeJourney
               ? `Your ${activeJourney.destination} trip is in progress`
+              : nextJourney
+                ? `Next up: ${nextJourney.destination}`
               : 'Ready to start your next adventure?'}
           </p>
         </div>
@@ -85,17 +107,17 @@ export default async function DashboardPage() {
         </Button>
       </div>
 
-      {activeJourney && stats ? (
+      {featuredJourney && stats ? (
         <Card className="mb-6 border-primary/20 bg-primary text-primary-foreground">
           <CardHeader>
-            <CardTitle className="text-xl">{activeJourney.title}</CardTitle>
+            <CardTitle className="text-xl">{featuredJourney.title}</CardTitle>
             <CardDescription className="flex items-center gap-2 text-primary-foreground/75">
               <MapPin className="size-4" />
-              {activeJourney.destination}
+              {featuredJourney.destination}
             </CardDescription>
             <CardAction>
               <Badge className="bg-white/15 text-primary-foreground">
-                Active
+                {activeJourney ? 'Active' : 'Next Trip'}
               </Badge>
             </CardAction>
           </CardHeader>
@@ -108,10 +130,17 @@ export default async function DashboardPage() {
                 </p>
               </div>
               <div className="rounded-lg bg-white/10 p-4">
-                <p className="text-sm text-primary-foreground/70">Days Left</p>
+                <p className="text-sm text-primary-foreground/70">
+                  {activeJourney ? 'Days Left' : 'Starts In'}
+                </p>
                 <p className="mt-1 text-2xl font-semibold">
                   {Math.ceil(
-                    (new Date(activeJourney.end_date).getTime() - Date.now()) /
+                    (new Date(
+                      activeJourney
+                        ? featuredJourney.end_date
+                        : featuredJourney.start_date,
+                    ).getTime() -
+                      Date.now()) /
                       (1000 * 60 * 60 * 24),
                   )}
                 </p>
@@ -123,7 +152,7 @@ export default async function DashboardPage() {
               className="mt-6 w-full"
               size="lg"
             >
-              <Link href={`/journeys/${activeJourney.id}`}>
+              <Link href={`/journeys/${featuredJourney.id}`}>
                 View Journey Details
                 <ArrowRight className="size-4" />
               </Link>
@@ -190,6 +219,58 @@ export default async function DashboardPage() {
           </Link>
         </Card>
       </div>
+
+      {activeJourney && todayActivities.length > 0 && (
+        <div className="mb-8">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Today</h2>
+            <Button asChild variant="ghost">
+              <Link href={`/activities?journey=${activeJourney.id}`}>
+                View All
+              </Link>
+            </Button>
+          </div>
+          <div className="space-y-3">
+            {todayActivities.slice(0, 3).map((activity) => {
+              const scheduledAt = activity.scheduled_at
+                ? new Date(activity.scheduled_at)
+                : null;
+
+              return (
+                <Card
+                  key={activity.id}
+                  className="transition-colors hover:bg-accent/50"
+                >
+                  <Link
+                    href={`/journeys/${activeJourney.id}/activities/${activity.id}/edit`}
+                    className="flex items-center justify-between gap-4 p-4"
+                  >
+                    <div className="min-w-0">
+                      <h3 className="truncate font-medium">
+                        {activity.title}
+                      </h3>
+                      {activity.location && (
+                        <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                          <MapPin className="size-3.5" />
+                          {activity.location}
+                        </p>
+                      )}
+                    </div>
+                    {scheduledAt && (
+                      <p className="shrink-0 text-sm text-muted-foreground">
+                        {scheduledAt.toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    )}
+                  </Link>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {journeys && journeys.length > 0 && (
         <div>

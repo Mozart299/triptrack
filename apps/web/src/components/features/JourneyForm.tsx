@@ -62,6 +62,17 @@ export default function JourneyForm({
     setLoading(true);
     setError(null);
 
+    if (formData.start_date && formData.end_date) {
+      const startDate = new Date(formData.start_date);
+      const endDate = new Date(formData.end_date);
+
+      if (endDate < startDate) {
+        setError('End date must be the same as or after the start date.');
+        setLoading(false);
+        return;
+      }
+    }
+
     const supabase = createClient();
     const {
       data: { user },
@@ -195,6 +206,7 @@ export default function JourneyForm({
             name="end_date"
             value={formData.end_date}
             onChange={handleChange}
+            min={formData.start_date || undefined}
             required
           />
         </div>

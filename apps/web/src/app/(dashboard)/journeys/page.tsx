@@ -1,6 +1,15 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { CalendarDays, Clock, MapPin, Plane, Plus, Users } from 'lucide-react';
+import {
+  CalendarDays,
+  Clock,
+  ListTodo,
+  MapPin,
+  Plane,
+  Plus,
+  UserPlus,
+  Users,
+} from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -66,74 +75,92 @@ export default async function JourneysPage() {
                 key={journey.id}
                 className="transition-colors hover:bg-accent/50"
               >
-                <Link href={`/journeys/${journey.id}`} className="block">
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <Link
+                        href={`/journeys/${journey.id}`}
+                        className="rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
                         <CardTitle className="text-lg">
                           {journey.title}
                         </CardTitle>
-                        <CardDescription className="mt-2 flex items-center gap-1.5">
-                          <MapPin className="size-3.5" />
-                          {journey.destination}
-                        </CardDescription>
-                      </div>
-                      <Badge
-                        variant={isActive ? 'default' : 'secondary'}
-                        className={
-                          isCompleted ? 'bg-muted text-muted-foreground' : ''
-                        }
-                      >
-                        {isActive
-                          ? 'Active'
-                          : isCompleted
-                            ? 'Completed'
-                            : 'Planning'}
-                      </Badge>
+                      </Link>
+                      <CardDescription className="mt-2 flex items-center gap-1.5">
+                        <MapPin className="size-3.5" />
+                        {journey.destination}
+                      </CardDescription>
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {!isOwner && (
-                      <Badge variant="outline" className="gap-1">
-                        <Users className="size-3" />
-                        Shared with you
-                      </Badge>
-                    )}
-                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <CalendarDays className="size-3.5" />
-                      {startDate.toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}{' '}
-                      -{' '}
-                      {endDate.toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
+                    <Badge
+                      variant={isActive ? 'default' : 'secondary'}
+                      className={
+                        isCompleted ? 'bg-muted text-muted-foreground' : ''
+                      }
+                    >
+                      {isActive
+                        ? 'Active'
+                        : isCompleted
+                          ? 'Completed'
+                          : 'Planning'}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {!isOwner && (
+                    <Badge variant="outline" className="gap-1">
+                      <Users className="size-3" />
+                      Shared with you
+                    </Badge>
+                  )}
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <CalendarDays className="size-3.5" />
+                    {startDate.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}{' '}
+                    -{' '}
+                    {endDate.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </p>
+
+                  {journey.description && (
+                    <p className="text-sm text-muted-foreground">
+                      {journey.description}
                     </p>
+                  )}
 
-                    {journey.description && (
-                      <p className="text-sm text-muted-foreground">
-                        {journey.description}
-                      </p>
-                    )}
+                  {!isCompleted && !isActive && daysUntil > 0 && (
+                    <div className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2 text-sm text-secondary-foreground">
+                      <Clock className="size-4" />
+                      Starts in {daysUntil} day{daysUntil !== 1 ? 's' : ''}
+                    </div>
+                  )}
 
-                    {!isCompleted && !isActive && daysUntil > 0 && (
-                      <div className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2 text-sm text-secondary-foreground">
-                        <Clock className="size-4" />
-                        Starts in {daysUntil} day{daysUntil !== 1 ? 's' : ''}
-                      </div>
-                    )}
+                  {isActive && (
+                    <div className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
+                      Trip is happening now
+                    </div>
+                  )}
 
-                    {isActive && (
-                      <div className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
-                        Trip is happening now
-                      </div>
-                    )}
-                  </CardContent>
-                </Link>
+                  <div className="flex flex-col gap-2 pt-2 sm:flex-row">
+                    <Button asChild variant="secondary" className="flex-1">
+                      <Link href={`/journeys/${journey.id}/activities/new`}>
+                        <ListTodo className="size-4" />
+                        Add Activity
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="flex-1">
+                      <Link href={`/journeys/${journey.id}`}>
+                        <UserPlus className="size-4" />
+                        Invite
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
               </Card>
             );
           })}

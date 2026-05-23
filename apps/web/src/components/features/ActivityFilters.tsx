@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -20,6 +20,7 @@ interface ActivityFiltersProps {
 export default function ActivityFilters({ journeyId }: ActivityFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get('search') ?? '');
 
   const updateParam = useCallback(
     (key: string, value: string) => {
@@ -31,6 +32,20 @@ export default function ActivityFilters({ journeyId }: ActivityFiltersProps) {
     },
     [router, searchParams, journeyId],
   );
+
+  useEffect(() => {
+    setSearch(searchParams.get('search') ?? '');
+  }, [searchParams]);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (search !== (searchParams.get('search') ?? '')) {
+        updateParam('search', search.trim());
+      }
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [search, searchParams, updateParam]);
 
   const hasFilters =
     !!searchParams.get('search') || !!searchParams.get('category');
@@ -45,8 +60,8 @@ export default function ActivityFilters({ journeyId }: ActivityFiltersProps) {
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search activities..."
-          defaultValue={searchParams.get('search') ?? ''}
-          onChange={(e) => updateParam('search', e.target.value)}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           className="pl-9"
         />
       </div>

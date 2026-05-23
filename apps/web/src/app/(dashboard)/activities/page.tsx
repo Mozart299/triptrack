@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { ListTodo, Plane, Plus } from 'lucide-react';
+import { SearchX, ListTodo, Plane, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import ActivityCheckIn from '@/components/features/ActivityCheckIn';
 import ActivityFilters from '@/components/features/ActivityFilters';
 import ActivityRow from '@/components/features/ActivityRow';
 import JourneySwitcher from '@/components/features/JourneySwitcher';
 import { formatCurrency } from '@/lib/currency';
+import type { Activity } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -14,6 +15,40 @@ export const dynamic = 'force-dynamic';
 
 interface ActivitiesPageProps {
   searchParams: Promise<{ journey?: string; search?: string; category?: string }>;
+}
+
+function groupActivitiesByDate(
+  activities: Activity[],
+  dateField: 'scheduled_at' | 'completed_at',
+) {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+  const groups = new Map<string, { date: Date; activities: Activity[] }>();
+
+  activities.forEach((activity) => {
+    const value = activity[dateField];
+    if (!value) return;
+
+    const date = new Date(value);
+    const key = date.toDateString();
+    const existing = groups.get(key);
+
+    if (existing) {
+      existing.activities.push(activity);
+    } else {
+      groups.set(key, { date, activities: [activity] });
+    }
+  });
+
+  return Array.from(groups.values())
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .map((group) => ({
+      label: formatter.format(group.date),
+      activities: group.activities,
+    }));
 }
 
 export default async function ActivitiesPage({
@@ -55,9 +90,22 @@ export default async function ActivitiesPage({
     );
   }
 
-  const journey =
-    (journeyParam && journeys.find((j) => j.id === journeyParam)) ||
-    journeys[0];
+  const now = new Date();
+  const selectedJourney = journeyParam
+    ? journeys.find((j) => j.id === journeyParam)
+    : null;
+  const activeJourney = journeys.find((j) => {
+    const start = new Date(j.start_date);
+    const end = new Date(j.end_date);
+    return now >= start && now <= end;
+  });
+  const nextJourney = journeys
+    .filter((j) => new Date(j.start_date) > now)
+    .sort(
+      (a, b) =>
+        new Date(a.start_date).getTime() - new Date(b.start_date).getTime(),
+    )[0];
+  const journey = selectedJourney || activeJourney || nextJourney || journeys[0];
 
   let activitiesQuery = supabase
     .from('activities')
@@ -69,8 +117,6 @@ export default async function ActivitiesPage({
   if (category) activitiesQuery = activitiesQuery.eq('category', category);
 
   const { data: activities } = await activitiesQuery;
-
-  const now = new Date();
 
   const upcoming = activities?.filter((a) => {
     if (a.completed_at) return false;
@@ -89,6 +135,10 @@ export default async function ActivitiesPage({
   );
 
   const completed = activities?.filter((a) => a.completed_at);
+  const hasFilters = Boolean(search || category);
+  const hasActivities = Boolean(activities && activities.length > 0);
+  const upcomingGroups = groupActivitiesByDate(upcoming ?? [], 'scheduled_at');
+  const completedGroups = groupActivitiesByDate(completed ?? [], 'completed_at');
 
   return (
     <div className="container-app py-8">
@@ -181,9 +231,21 @@ export default async function ActivitiesPage({
       {upcoming && upcoming.length > 0 && (
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-3">Upcoming</h2>
-          <div className="space-y-3">
-            {upcoming.map((activity) => (
-              <ActivityRow key={activity.id} activity={activity} journeyId={journey.id} currency={journey.currency} />
+          <div className="space-y-5">
+            {upcomingGroups.map((group) => (
+              <div key={group.label} className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {group.label}
+                </h3>
+                {group.activities.map((activity) => (
+                  <ActivityRow
+                    key={activity.id}
+                    activity={activity}
+                    journeyId={journey.id}
+                    currency={journey.currency}
+                  />
+                ))}
+              </div>
             ))}
           </div>
         </div>
@@ -192,21 +254,45 @@ export default async function ActivitiesPage({
       {completed && completed.length > 0 && (
         <div>
           <h2 className="text-lg font-semibold mb-3">Completed</h2>
-          <div className="space-y-3">
-            {completed.map((activity) => (
-              <ActivityRow
-                key={activity.id}
-                activity={activity}
-                journeyId={journey.id}
-                currency={journey.currency}
-                completedItem
-              />
+          <div className="space-y-5">
+            {completedGroups.map((group) => (
+              <div key={group.label} className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {group.label}
+                </h3>
+                {group.activities.map((activity) => (
+                  <ActivityRow
+                    key={activity.id}
+                    activity={activity}
+                    journeyId={journey.id}
+                    currency={journey.currency}
+                    completedItem
+                  />
+                ))}
+              </div>
             ))}
           </div>
         </div>
       )}
 
-      {activities && activities.length === 0 && (
+      {activities && activities.length === 0 && hasFilters && (
+        <Card className="text-center">
+          <CardContent className="py-12">
+            <SearchX className="mx-auto mb-4 size-10 text-muted-foreground" />
+            <h3 className="text-lg font-semibold">No matching activities</h3>
+            <p className="mt-2 text-muted-foreground">
+              Try clearing your search or category filter.
+            </p>
+            <Button asChild variant="secondary" className="mt-6">
+              <Link href={`/activities?journey=${journey.id}`}>
+                Clear Filters
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {activities && !hasActivities && !hasFilters && (
         <Card className="text-center">
           <CardContent className="py-12">
             <ListTodo className="mx-auto mb-4 size-10 text-muted-foreground" />
