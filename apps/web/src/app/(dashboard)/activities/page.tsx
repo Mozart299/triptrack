@@ -7,6 +7,12 @@ import ActivityFilters from '@/components/features/ActivityFilters';
 import ActivityRow from '@/components/features/ActivityRow';
 import JourneySwitcher from '@/components/features/JourneySwitcher';
 import { formatCurrency } from '@/lib/currency';
+import {
+  endOfLocalDay,
+  getJourneyTiming,
+  parseDateOnly,
+  startOfLocalDay,
+} from '@/lib/trip-dates';
 import type { Activity } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,7 +20,12 @@ import { Card, CardContent } from '@/components/ui/card';
 export const dynamic = 'force-dynamic';
 
 interface ActivitiesPageProps {
-  searchParams: Promise<{ journey?: string; search?: string; category?: string }>;
+  searchParams: Promise<{
+    journey?: string;
+    search?: string;
+    category?: string;
+    status?: string;
+  }>;
 }
 
 function groupActivitiesByDate(
@@ -64,7 +75,12 @@ export default async function ActivitiesPage({
     redirect('/login');
   }
 
-  const { journey: journeyParam, search, category } = await searchParams;
+  const {
+    journey: journeyParam,
+    search,
+    category,
+    status,
+  } = await searchParams;
 
   const { data: journeys } = await supabase
     .from('journeys')
@@ -95,15 +111,14 @@ export default async function ActivitiesPage({
     ? journeys.find((j) => j.id === journeyParam)
     : null;
   const activeJourney = journeys.find((j) => {
-    const start = new Date(j.start_date);
-    const end = new Date(j.end_date);
-    return now >= start && now <= end;
+    return getJourneyTiming(j, now).isActive;
   });
   const nextJourney = journeys
-    .filter((j) => new Date(j.start_date) > now)
+    .filter((j) => parseDateOnly(j.start_date) > startOfLocalDay(now))
     .sort(
       (a, b) =>
-        new Date(a.start_date).getTime() - new Date(b.start_date).getTime(),
+        parseDateOnly(a.start_date).getTime() -
+        parseDateOnly(b.start_date).getTime(),
     )[0];
   const journey = selectedJourney || activeJourney || nextJourney || journeys[0];
 
@@ -113,30 +128,67 @@ export default async function ActivitiesPage({
     .eq('journey_id', journey.id)
     .order('scheduled_at', { ascending: true });
 
-  if (search) activitiesQuery = activitiesQuery.ilike('title', `%${search}%`);
+  if (search) {
+    const term = `%${search}%`;
+    activitiesQuery = activitiesQuery.or(
+      `title.ilike.${term},location.ilike.${term},description.ilike.${term},notes.ilike.${term},category.ilike.${term}`,
+    );
+  }
   if (category) activitiesQuery = activitiesQuery.eq('category', category);
 
   const { data: activities } = await activitiesQuery;
 
-  const upcoming = activities?.filter((a) => {
+  let visibleActivities = activities ?? [];
+
+  if (status === 'paid') {
+    visibleActivities = visibleActivities.filter((a) => a.cost_paid);
+  } else if (status === 'unpaid') {
+    visibleActivities = visibleActivities.filter(
+      (a) => Boolean(a.estimated_cost && a.estimated_cost > 0) && !a.cost_paid,
+    );
+  } else if (status === 'unscheduled') {
+    visibleActivities = visibleActivities.filter(
+      (a) => !a.completed_at && !a.scheduled_at,
+    );
+  } else if (status === 'needs-check-in') {
+    visibleActivities = visibleActivities.filter((a) => {
+      if (a.completed_at || !a.scheduled_at) return false;
+      const scheduledAt = new Date(a.scheduled_at);
+      return scheduledAt <= endOfLocalDay(now);
+    });
+  }
+
+  const missed = visibleActivities.filter((a) => {
     if (a.completed_at) return false;
     if (!a.scheduled_at) return false;
-    return new Date(a.scheduled_at) > now;
+    return new Date(a.scheduled_at) < startOfLocalDay(now);
   });
 
-  const ongoing = activities?.filter((a) => {
+  const today = visibleActivities.filter((a) => {
     if (a.completed_at) return false;
     if (!a.scheduled_at) return false;
-    return new Date(a.scheduled_at) <= now;
+    const scheduledAt = new Date(a.scheduled_at);
+    return scheduledAt >= startOfLocalDay(now) && scheduledAt <= endOfLocalDay(now);
   });
 
-  const unscheduled = activities?.filter(
+  const upcoming = visibleActivities.filter((a) => {
+    if (a.completed_at) return false;
+    if (!a.scheduled_at) return false;
+    return new Date(a.scheduled_at) > endOfLocalDay(now);
+  });
+
+  const unscheduled = visibleActivities.filter(
     (a) => !a.completed_at && !a.scheduled_at,
   );
 
-  const completed = activities?.filter((a) => a.completed_at);
-  const hasFilters = Boolean(search || category);
-  const hasActivities = Boolean(activities && activities.length > 0);
+  const completed = visibleActivities.filter((a) => a.completed_at);
+  const hasFilters = Boolean(search || category || status);
+  const hasActivities = visibleActivities.length > 0;
+  const totalBudget = visibleActivities.reduce(
+    (sum, a) => sum + (a.estimated_cost || 0),
+    0,
+  );
+  const needsAttention = missed.length + today.length;
   const upcomingGroups = groupActivitiesByDate(upcoming ?? [], 'scheduled_at');
   const completedGroups = groupActivitiesByDate(completed ?? [], 'completed_at');
 
@@ -173,9 +225,9 @@ export default async function ActivitiesPage({
         <Card>
           <CardContent className="py-3 text-center">
             <p className="text-2xl font-semibold text-primary">
-              {ongoing?.length || 0}
+              {needsAttention}
             </p>
-            <p className="text-xs text-muted-foreground">Ongoing</p>
+            <p className="text-xs text-muted-foreground">Today/Missed</p>
           </CardContent>
         </Card>
         <Card>
@@ -188,10 +240,7 @@ export default async function ActivitiesPage({
           <CardContent className="py-3 text-center">
             <p className="text-lg font-semibold leading-tight">
               {formatCurrency(
-                activities?.reduce(
-                  (sum, a) => sum + (a.estimated_cost || 0),
-                  0,
-                ) || 0,
+                totalBudget,
                 journey.currency,
               )}
             </p>
@@ -202,11 +251,27 @@ export default async function ActivitiesPage({
 
       <ActivityFilters journeyId={journey.id} />
 
-      {ongoing && ongoing.length > 0 && (
+      {missed.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3">Ready to Check In</h2>
+          <h2 className="text-lg font-semibold mb-3">Missed</h2>
           <div className="space-y-3">
-            {ongoing.map((activity) => (
+            {missed.map((activity) => (
+              <ActivityRow
+                key={activity.id}
+                activity={activity}
+                journeyId={journey.id}
+                currency={journey.currency}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {today.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-3">Today</h2>
+          <div className="space-y-3">
+            {today.map((activity) => (
               <ActivityCheckIn
                 key={activity.id}
                 activity={activity}
@@ -217,7 +282,7 @@ export default async function ActivitiesPage({
         </div>
       )}
 
-      {unscheduled && unscheduled.length > 0 && (
+      {unscheduled.length > 0 && (
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-3">Unscheduled</h2>
           <div className="space-y-3">
@@ -228,7 +293,7 @@ export default async function ActivitiesPage({
         </div>
       )}
 
-      {upcoming && upcoming.length > 0 && (
+      {upcoming.length > 0 && (
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-3">Upcoming</h2>
           <div className="space-y-5">
@@ -251,7 +316,7 @@ export default async function ActivitiesPage({
         </div>
       )}
 
-      {completed && completed.length > 0 && (
+      {completed.length > 0 && (
         <div>
           <h2 className="text-lg font-semibold mb-3">Completed</h2>
           <div className="space-y-5">
@@ -275,7 +340,7 @@ export default async function ActivitiesPage({
         </div>
       )}
 
-      {activities && activities.length === 0 && hasFilters && (
+      {visibleActivities.length === 0 && hasFilters && (
         <Card className="text-center">
           <CardContent className="py-12">
             <SearchX className="mx-auto mb-4 size-10 text-muted-foreground" />
@@ -292,7 +357,7 @@ export default async function ActivitiesPage({
         </Card>
       )}
 
-      {activities && !hasActivities && !hasFilters && (
+      {!hasActivities && !hasFilters && (
         <Card className="text-center">
           <CardContent className="py-12">
             <ListTodo className="mx-auto mb-4 size-10 text-muted-foreground" />

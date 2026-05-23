@@ -96,6 +96,7 @@ export default function ActivityForm({
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
     initialSelectedParticipants,
   );
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -105,14 +106,52 @@ export default function ActivityForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationError(null);
+
+    const estimatedCost = formData.estimatedCost
+      ? parseFloat(formData.estimatedCost)
+      : 0;
+
+    if (
+      estimatedCost > 0 &&
+      formData.costSplitType === 'equal' &&
+      selectedParticipants.length === 0
+    ) {
+      setValidationError('Select at least one participant for an equal split.');
+      return;
+    }
+
+    if (formData.costSplitType === 'individual') {
+      const activeCosts = participantCosts.filter((cost) => cost.amount > 0);
+      const individualTotal = activeCosts.reduce(
+        (sum, cost) => sum + cost.amount,
+        0,
+      );
+
+      if (estimatedCost > 0 && activeCosts.length === 0) {
+        setValidationError('Add at least one participant cost.');
+        return;
+      }
+
+      if (
+        estimatedCost > 0 &&
+        Math.abs(individualTotal - estimatedCost) > 0.01
+      ) {
+        setValidationError(
+          'Individual costs must add up to the estimated cost.',
+        );
+        return;
+      }
+    }
+
     onSubmit(formData, participantCosts, selectedParticipants);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
+      {(error || validationError) && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{error || validationError}</AlertDescription>
         </Alert>
       )}
 
@@ -266,6 +305,11 @@ export default function ActivityForm({
               costs={participantCosts}
               onChange={setParticipantCosts}
               currency={currency}
+              estimatedCost={
+                formData.estimatedCost
+                  ? parseFloat(formData.estimatedCost)
+                  : undefined
+              }
             />
           )}
         </>

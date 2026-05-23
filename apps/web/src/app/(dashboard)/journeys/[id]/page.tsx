@@ -26,6 +26,7 @@ import ActivityCostBreakdown from '@/components/features/ActivityCostBreakdown';
 import JourneyParticipantCostSummary from '@/components/features/JourneyParticipantCostSummary';
 import MarkActivityPaid from '@/components/features/MarkActivityPaid';
 import { formatCurrency } from '@/lib/currency';
+import { getJourneyTiming } from '@/lib/trip-dates';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -70,7 +71,11 @@ export default async function JourneyDetailPage({
     notFound();
   }
 
-  const [{ data: activities }, { data: participantsData }] = await Promise.all([
+  const [
+    { data: activities },
+    { data: participantsData },
+    { data: pendingInvites },
+  ] = await Promise.all([
     supabase
       .from('activities')
       .select('*')
@@ -92,6 +97,11 @@ export default async function JourneyDetailPage({
       `,
       )
       .eq('journey_id', id),
+    supabase
+      .from('pending_invites')
+      .select('id, invitee_email, created_at')
+      .eq('journey_id', id)
+      .order('created_at', { ascending: false }),
   ]);
   const participants = (participantsData ?? []) as ParticipantWithProfile[];
 
@@ -99,17 +109,9 @@ export default async function JourneyDetailPage({
   const completedActivities =
     activities?.filter((a) => a.completed_at).length || 0;
 
-  const startDate = new Date(journey.start_date);
-  const endDate = new Date(journey.end_date);
   const today = new Date();
-  const isActive = today >= startDate && today <= endDate;
-  const isCompleted = today > endDate;
-  const daysUntil = Math.ceil(
-    (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-  );
-  const tripDuration = Math.ceil(
-    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-  );
+  const { startDate, endDate, isActive, isCompleted, daysUntil, tripDuration } =
+    getJourneyTiming(journey, today);
 
   return (
     <div className="container-app py-8">
@@ -410,6 +412,27 @@ export default async function JourneyDetailPage({
                     })}
                   </div>
                   <Separator className="mb-4" />
+                  {isOwner && pendingInvites && pendingInvites.length > 0 && (
+                    <>
+                      <div className="mb-4 space-y-2">
+                        <h3 className="text-sm font-semibold">
+                          Pending Invites
+                        </h3>
+                        {pendingInvites.map((invite) => (
+                          <div
+                            key={invite.id}
+                            className="flex items-center justify-between gap-3 rounded-lg bg-muted/40 px-3 py-2"
+                          >
+                            <span className="min-w-0 truncate text-sm">
+                              {invite.invitee_email}
+                            </span>
+                            <Badge variant="outline">Pending</Badge>
+                          </div>
+                        ))}
+                      </div>
+                      <Separator className="mb-4" />
+                    </>
+                  )}
                   <div>
                     <JourneyParticipantCostSummary
                       journeyId={id}

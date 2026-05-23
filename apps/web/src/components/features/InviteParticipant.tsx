@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { CheckCircle2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { CheckCircle2, UserPlus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ interface InviteProps {
 export default function InviteParticipant({ journeyId }: InviteProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{
@@ -103,6 +104,12 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
     }
   };
 
+  useEffect(() => {
+    if (searchParams.get('invite') === '1') {
+      setOpen(true);
+    }
+  }, [searchParams]);
+
   return (
     <div>
       <Button
@@ -110,6 +117,7 @@ export default function InviteParticipant({ journeyId }: InviteProps) {
         variant="secondary"
         className="mt-4 w-full"
       >
+        <UserPlus className="size-4" />
         Invite Participant
       </Button>
 

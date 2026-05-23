@@ -10,6 +10,12 @@ import {
   Users,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import {
+  endOfLocalDay,
+  getJourneyTiming,
+  parseDateOnly,
+  startOfLocalDay,
+} from '@/lib/trip-dates';
 import type { Activity } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,25 +39,23 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  // Fetch user's journeys
+  // RLS limits this to journeys the user can access, including shared trips.
   const { data: journeys } = await supabase
     .from('journeys')
     .select('*')
-    .eq('user_id', user.id)
     .order('start_date', { ascending: false });
 
   // Fetch active journey based on dates
   const now = new Date();
   const activeJourney = journeys?.find((j) => {
-    const start = new Date(j.start_date);
-    const end = new Date(j.end_date);
-    return now >= start && now <= end;
+    return getJourneyTiming(j, now).isActive;
   });
   const nextJourney = journeys
-    ?.filter((j) => new Date(j.start_date) > now)
+    ?.filter((j) => parseDateOnly(j.start_date) > startOfLocalDay(now))
     .sort(
       (a, b) =>
-        new Date(a.start_date).getTime() - new Date(b.start_date).getTime(),
+        parseDateOnly(a.start_date).getTime() -
+        parseDateOnly(b.start_date).getTime(),
     )[0];
   const featuredJourney = activeJourney || nextJourney;
 
@@ -66,10 +70,8 @@ export default async function DashboardPage() {
 
     const completedActivities =
       activitiesResult.data?.filter((a) => a.completed_at)?.length || 0;
-    const startOfToday = new Date(now);
-    startOfToday.setHours(0, 0, 0, 0);
-    const endOfToday = new Date(now);
-    endOfToday.setHours(23, 59, 59, 999);
+    const startOfToday = startOfLocalDay(now);
+    const endOfToday = endOfLocalDay(now);
 
     todayActivities =
       activitiesResult.data?.filter((activity) => {
@@ -134,15 +136,9 @@ export default async function DashboardPage() {
                   {activeJourney ? 'Days Left' : 'Starts In'}
                 </p>
                 <p className="mt-1 text-2xl font-semibold">
-                  {Math.ceil(
-                    (new Date(
-                      activeJourney
-                        ? featuredJourney.end_date
-                        : featuredJourney.start_date,
-                    ).getTime() -
-                      Date.now()) /
-                      (1000 * 60 * 60 * 24),
-                  )}
+                  {activeJourney
+                    ? getJourneyTiming(featuredJourney, now).daysLeft
+                    : getJourneyTiming(featuredJourney, now).daysUntil}
                 </p>
               </div>
             </div>

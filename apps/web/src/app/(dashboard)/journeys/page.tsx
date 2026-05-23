@@ -11,6 +11,7 @@ import {
   Users,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { getJourneyTiming } from '@/lib/trip-dates';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -58,14 +59,9 @@ export default async function JourneysPage() {
       {journeys && journeys.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
           {journeys.map((journey) => {
-            const startDate = new Date(journey.start_date);
-            const endDate = new Date(journey.end_date);
             const today = new Date();
-            const isActive = today >= startDate && today <= endDate;
-            const isCompleted = today > endDate;
-            const daysUntil = Math.ceil(
-              (startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-            );
+            const { startDate, endDate, isActive, isCompleted, daysUntil } =
+              getJourneyTiming(journey, today);
 
             // Check ownership for the UI badge
             const isOwner = journey.user_id === user.id;
@@ -154,7 +150,7 @@ export default async function JourneysPage() {
                       </Link>
                     </Button>
                     <Button asChild variant="outline" className="flex-1">
-                      <Link href={`/journeys/${journey.id}`}>
+                      <Link href={`/journeys/${journey.id}?invite=1`}>
                         <UserPlus className="size-4" />
                         Invite
                       </Link>

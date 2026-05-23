@@ -15,6 +15,7 @@ interface ParticipantCostInputProps {
   costs: ParticipantCost[];
   onChange: (costs: ParticipantCost[]) => void;
   currency: string;
+  estimatedCost?: number;
 }
 
 export default function ParticipantCostInput({
@@ -22,6 +23,7 @@ export default function ParticipantCostInput({
   costs,
   onChange,
   currency,
+  estimatedCost,
 }: ParticipantCostInputProps) {
   const handleAmountChange = (userId: string, amount: string) => {
     const numAmount = amount === '' ? 0 : parseFloat(amount);
@@ -59,6 +61,8 @@ export default function ParticipantCostInput({
   };
 
   const totalCost = costs.reduce((sum, cost) => sum + cost.amount, 0);
+  const difference =
+    estimatedCost && estimatedCost > 0 ? totalCost - estimatedCost : 0;
 
   return (
     <div className="space-y-3">
@@ -70,6 +74,22 @@ export default function ParticipantCostInput({
           </span>
         )}
       </div>
+
+      {estimatedCost && estimatedCost > 0 && (
+        <div
+          className={`rounded-lg px-3 py-2 text-sm ${
+            Math.abs(difference) <= 0.01
+              ? 'bg-emerald-50 text-emerald-800'
+              : 'bg-secondary text-secondary-foreground'
+          }`}
+        >
+          {Math.abs(difference) <= 0.01
+            ? 'Individual costs match the estimated cost.'
+            : `Remaining: ${currency} ${Math.abs(difference).toFixed(2)} ${
+                difference > 0 ? 'over' : 'left'
+              }`}
+        </div>
+      )}
 
       <div className="space-y-3">
         {participants.map((participant) => {

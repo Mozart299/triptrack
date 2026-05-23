@@ -10,6 +10,8 @@ interface ParticipantTotal {
   name: string;
   email: string;
   total: number;
+  paid: number;
+  balance: number;
 }
 
 interface JourneyParticipantCostSummaryProps {
@@ -52,10 +54,12 @@ export default function JourneyParticipantCostSummary({
 
       // Calculate totals for each participant
       const totals: Record<string, number> = {};
+      const paidTotals: Record<string, number> = {};
 
       // Initialize all participants with 0
       participants.forEach((p) => {
         totals[p.id] = 0;
+        paidTotals[p.id] = 0;
       });
 
       // Calculate based on each activity
@@ -70,6 +74,10 @@ export default function JourneyParticipantCostSummary({
           if (selectedParticipants.length > 0) {
             const perPerson =
               activity.estimated_cost / selectedParticipants.length;
+            if (paidTotals[activity.user_id] !== undefined) {
+              paidTotals[activity.user_id] =
+                (paidTotals[activity.user_id] || 0) + activity.estimated_cost;
+            }
             selectedParticipants.forEach((userId) => {
               if (totals[userId] !== undefined) {
                 totals[userId] = (totals[userId] || 0) + perPerson;
@@ -84,6 +92,14 @@ export default function JourneyParticipantCostSummary({
           const activityCosts = participantCosts.filter(
             (pc) => pc.activity_id === activity.id,
           );
+          const activityTotal = activityCosts.reduce(
+            (sum, cost) => sum + cost.amount,
+            0,
+          );
+          if (paidTotals[activity.user_id] !== undefined) {
+            paidTotals[activity.user_id] =
+              (paidTotals[activity.user_id] || 0) + activityTotal;
+          }
           activityCosts.forEach((cost) => {
             if (totals[cost.user_id] !== undefined) {
               totals[cost.user_id] = (totals[cost.user_id] || 0) + cost.amount;
@@ -99,6 +115,8 @@ export default function JourneyParticipantCostSummary({
         name: p.full_name || p.email,
         email: p.email,
         total: totals[p.id] || 0,
+        paid: paidTotals[p.id] || 0,
+        balance: (paidTotals[p.id] || 0) - (totals[p.id] || 0),
       }));
 
       setParticipantTotals(totalsArray);
@@ -119,6 +137,9 @@ export default function JourneyParticipantCostSummary({
   }
 
   const grandTotal = participantTotals.reduce((sum, p) => sum + p.total, 0);
+  const settlements = participantTotals.filter(
+    (participant) => Math.abs(participant.balance) > 0.01,
+  );
 
   return (
     <div className="space-y-3">
@@ -149,6 +170,34 @@ export default function JourneyParticipantCostSummary({
           <p className="shrink-0 text-sm font-bold text-primary sm:text-base">
             {formatCurrency(grandTotal, currency)}
           </p>
+        </div>
+      )}
+      {settlements.length > 0 && (
+        <div className="rounded-lg bg-muted/40 p-3">
+          <h4 className="text-sm font-semibold">Estimated Balances</h4>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Based on activity creators as payers.
+          </p>
+          <div className="mt-3 space-y-2">
+            {settlements.map((participant) => (
+              <div
+                key={participant.userId}
+                className="flex items-center justify-between gap-3 text-sm"
+              >
+                <span className="min-w-0 truncate">{participant.name}</span>
+                <span
+                  className={
+                    participant.balance > 0
+                      ? 'font-semibold text-emerald-700'
+                      : 'font-semibold text-amber-700'
+                  }
+                >
+                  {participant.balance > 0 ? 'gets back ' : 'owes '}
+                  {formatCurrency(Math.abs(participant.balance), currency)}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

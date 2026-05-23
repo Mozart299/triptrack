@@ -48,7 +48,9 @@ export default function ActivityFilters({ journeyId }: ActivityFiltersProps) {
   }, [search, searchParams, updateParam]);
 
   const hasFilters =
-    !!searchParams.get('search') || !!searchParams.get('category');
+    !!searchParams.get('search') ||
+    !!searchParams.get('category') ||
+    !!searchParams.get('status');
 
   const clearFilters = () => {
     router.replace(`/activities?journey=${journeyId}`);
@@ -80,6 +82,21 @@ export default function ActivityFilters({ journeyId }: ActivityFiltersProps) {
           <SelectItem value="sightseeing">Sightseeing</SelectItem>
           <SelectItem value="entertainment">Entertainment</SelectItem>
           <SelectItem value="other">Other</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select
+        value={searchParams.get('status') ?? 'all'}
+        onValueChange={(v) => updateParam('status', v === 'all' ? '' : v)}
+      >
+        <SelectTrigger className="w-40">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All statuses</SelectItem>
+          <SelectItem value="needs-check-in">Needs check-in</SelectItem>
+          <SelectItem value="unscheduled">Unscheduled</SelectItem>
+          <SelectItem value="unpaid">Unpaid</SelectItem>
+          <SelectItem value="paid">Paid</SelectItem>
         </SelectContent>
       </Select>
       {hasFilters && (
