@@ -60,6 +60,7 @@ export interface Database {
           updated_at: string
           journey_id: string
           user_id: string
+          paid_by: string | null
           title: string
           description: string | null
           location: string | null
@@ -78,6 +79,7 @@ export interface Database {
           updated_at?: string
           journey_id: string
           user_id: string
+          paid_by?: string | null
           title: string
           description?: string | null
           location?: string | null
@@ -96,6 +98,7 @@ export interface Database {
           updated_at?: string
           journey_id?: string
           user_id?: string
+          paid_by?: string | null
           title?: string
           description?: string | null
           location?: string | null

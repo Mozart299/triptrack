@@ -74,9 +74,10 @@ export default function JourneyParticipantCostSummary({
           if (selectedParticipants.length > 0) {
             const perPerson =
               activity.estimated_cost / selectedParticipants.length;
-            if (paidTotals[activity.user_id] !== undefined) {
-              paidTotals[activity.user_id] =
-                (paidTotals[activity.user_id] || 0) + activity.estimated_cost;
+            const payerId = activity.paid_by || activity.user_id;
+            if (paidTotals[payerId] !== undefined) {
+              paidTotals[payerId] =
+                (paidTotals[payerId] || 0) + activity.estimated_cost;
             }
             selectedParticipants.forEach((userId) => {
               if (totals[userId] !== undefined) {
@@ -96,9 +97,10 @@ export default function JourneyParticipantCostSummary({
             (sum, cost) => sum + cost.amount,
             0,
           );
-          if (paidTotals[activity.user_id] !== undefined) {
-            paidTotals[activity.user_id] =
-              (paidTotals[activity.user_id] || 0) + activityTotal;
+          const payerId = activity.paid_by || activity.user_id;
+          if (paidTotals[payerId] !== undefined) {
+            paidTotals[payerId] =
+              (paidTotals[payerId] || 0) + activityTotal;
           }
           activityCosts.forEach((cost) => {
             if (totals[cost.user_id] !== undefined) {
@@ -176,7 +178,7 @@ export default function JourneyParticipantCostSummary({
         <div className="rounded-lg bg-muted/40 p-3">
           <h4 className="text-sm font-semibold">Estimated Balances</h4>
           <p className="mt-1 text-xs text-muted-foreground">
-            Based on activity creators as payers.
+            Based on each activity's selected payer.
           </p>
           <div className="mt-3 space-y-2">
             {settlements.map((participant) => (

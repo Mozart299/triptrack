@@ -34,6 +34,7 @@ export interface ActivityFormData {
   scheduledAt: string;
   category: ActivityCategory;
   estimatedCost: string;
+  paidBy: string;
   notes: string;
   costSplitType: CostSplitType;
 }
@@ -51,6 +52,7 @@ export const defaultActivityFormData: ActivityFormData = {
   scheduledAt: '',
   category: 'other',
   estimatedCost: '',
+  paidBy: '',
   notes: '',
   costSplitType: 'none',
 };
@@ -60,6 +62,7 @@ interface ActivityFormProps {
   initialSelectedParticipants?: string[];
   initialParticipantCosts?: ParticipantCost[];
   participants: Profile[];
+  currentUserId?: string;
   currency: string;
   loading: boolean;
   error: string | null;
@@ -78,6 +81,7 @@ export default function ActivityForm({
   initialSelectedParticipants = [],
   initialParticipantCosts = [],
   participants,
+  currentUserId,
   currency,
   loading,
   error,
@@ -97,6 +101,7 @@ export default function ActivityForm({
     initialSelectedParticipants,
   );
   const [validationError, setValidationError] = useState<string | null>(null);
+  const selectedPayer = formData.paidBy || currentUserId || participants[0]?.id || '';
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -111,6 +116,15 @@ export default function ActivityForm({
     const estimatedCost = formData.estimatedCost
       ? parseFloat(formData.estimatedCost)
       : 0;
+
+    if (
+      estimatedCost > 0 &&
+      formData.costSplitType !== 'none' &&
+      !selectedPayer
+    ) {
+      setValidationError('Select who paid for this activity.');
+      return;
+    }
 
     if (
       estimatedCost > 0 &&
@@ -144,7 +158,14 @@ export default function ActivityForm({
       }
     }
 
-    onSubmit(formData, participantCosts, selectedParticipants);
+    onSubmit(
+      {
+        ...formData,
+        paidBy: selectedPayer,
+      },
+      participantCosts,
+      selectedParticipants,
+    );
   };
 
   return (
@@ -231,6 +252,29 @@ export default function ActivityForm({
           min="0"
         />
       </div>
+
+      {participants.length > 0 && (
+        <div className="space-y-2">
+          <Label htmlFor="paidBy">Paid By</Label>
+          <Select
+            value={selectedPayer}
+            onValueChange={(value) =>
+              setFormData((prev) => ({ ...prev, paidBy: value }))
+            }
+          >
+            <SelectTrigger id="paidBy">
+              <SelectValue placeholder="Choose payer" />
+            </SelectTrigger>
+            <SelectContent>
+              {participants.map((participant) => (
+                <SelectItem key={participant.id} value={participant.id}>
+                  {participant.full_name || participant.email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {participants.length > 1 && (
         <>

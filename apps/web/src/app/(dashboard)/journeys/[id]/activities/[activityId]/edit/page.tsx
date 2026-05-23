@@ -46,6 +46,7 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
   const [activityId, setActivityId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<Profile[]>([]);
   const [journeyCurrency, setJourneyCurrency] = useState('USD');
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>();
   const [initialData, setInitialData] = useState<ActivityFormData | null>(null);
   const [initialParticipantCosts, setInitialParticipantCosts] = useState<ParticipantCost[]>([]);
   const [initialSelectedParticipants, setInitialSelectedParticipants] = useState<string[]>([]);
@@ -56,6 +57,10 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
       setActivityId(p.activityId);
 
       const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id);
 
       const [{ data: journey }, { data: participantsData }, { data: activity, error: actErr }] =
         await Promise.all([
@@ -119,6 +124,7 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
         scheduledAt: scheduledAtLocal,
         category: (activity.category || 'other') as ActivityCategory,
         estimatedCost: activity.estimated_cost?.toString() || '',
+        paidBy: activity.paid_by || activity.user_id,
         notes: activity.notes || '',
         costSplitType: activity.cost_split_type || 'none',
       });
@@ -151,6 +157,7 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
         estimated_cost: formData.estimatedCost
           ? parseFloat(formData.estimatedCost)
           : null,
+        paid_by: formData.paidBy || null,
         notes: formData.notes || null,
         cost_split_type: formData.costSplitType,
         split_participants:
@@ -249,6 +256,7 @@ export default function EditActivityPage({ params }: EditActivityPageProps) {
                 initialParticipantCosts={initialParticipantCosts}
                 initialSelectedParticipants={initialSelectedParticipants}
                 participants={participants}
+                currentUserId={currentUserId}
                 currency={journeyCurrency}
                 loading={loading || deleting}
                 error={error}

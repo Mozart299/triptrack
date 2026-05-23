@@ -31,11 +31,16 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
   const [journeyId, setJourneyId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<Profile[]>([]);
   const [journeyCurrency, setJourneyCurrency] = useState('USD');
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>();
 
   useEffect(() => {
     params.then(async (p) => {
       setJourneyId(p.id);
       const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id);
 
       const [{ data: journey }, { data: participantsData }] = await Promise.all([
         supabase.from('journeys').select('currency').eq('id', p.id).single(),
@@ -81,6 +86,7 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
       .insert({
         journey_id: journeyId,
         user_id: user.id,
+        paid_by: formData.paidBy || user.id,
         title: formData.title,
         description: formData.description || null,
         location: formData.location || null,
@@ -165,6 +171,7 @@ export default function NewActivityPage({ params }: NewActivityPageProps) {
             <ActivityForm
               initialData={defaultActivityFormData}
               participants={participants}
+              currentUserId={currentUserId}
               currency={journeyCurrency}
               loading={loading}
               error={error}

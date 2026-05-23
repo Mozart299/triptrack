@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS activities (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   journey_id UUID NOT NULL REFERENCES journeys(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  paid_by UUID REFERENCES profiles(id),
   title TEXT NOT NULL,
   description TEXT,
   location TEXT,
@@ -70,6 +71,15 @@ CREATE TABLE IF NOT EXISTS activities (
 -- Add estimated_cost column if upgrading an existing database
 ALTER TABLE IF EXISTS activities
   ADD COLUMN IF NOT EXISTS estimated_cost NUMERIC(10,2);
+
+-- Add paid_by column if upgrading an existing database
+ALTER TABLE IF EXISTS activities
+  ADD COLUMN IF NOT EXISTS paid_by UUID REFERENCES profiles(id);
+
+-- Backfill paid_by from activity creator for existing activities
+UPDATE activities
+SET paid_by = user_id
+WHERE paid_by IS NULL;
 
 -- Add cost_split_type column if upgrading an existing database
 ALTER TABLE IF EXISTS activities
@@ -518,4 +528,3 @@ $$;
 -- Allow authenticated users to call the secure function (they still only
 -- receive rows if the function's membership check passes).
 GRANT EXECUTE ON FUNCTION public.get_journey_participants(UUID) TO authenticated;
-
