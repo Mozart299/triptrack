@@ -1,159 +1,190 @@
 # TripTrack
 
-A trip tracking and expense management web app built for any adventure.
+TripTrack is a mobile-friendly trip planning and shared-cost web app. It helps travelers create journeys, plan activities, invite participants, check in to trip events, and track who owes what.
 
 ## Features
 
-- **Journey Tracking**: Create and manage trips with dates, destinations, and participants
-- **Activity Management**: Plan and track activities throughout your journey
-- **Expense Splitting**: Record expenses and automatically split costs among participants
-- **Mobile-First Design**: Optimized for mobile devices with responsive Tailwind CSS
+- Email/password authentication with Supabase Auth
+- Journey creation, editing, deletion, and participant sharing
+- Dashboard view for active and upcoming trips
+- Activity planning with scheduled, unscheduled, missed, today, upcoming, and completed states
+- Activity search across title, location, description, notes, and category
+- Activity filters for category, paid/unpaid, unscheduled, and needs check-in
+- Participant invitations through Supabase Edge Functions
+- Pending invite visibility on journey detail pages
+- Activity cost tracking with paid/unpaid status
+- Equal and individual activity cost splits
+- Explicit `paid_by` tracking for activity payer balances
+- Per-participant cost and balance summaries
+- Per-journey currency support
+- Responsive navigation and mobile-first UI
 
 ## Tech Stack
 
-- **Frontend**: Next.js 16 (App Router) + TypeScript
-- **Styling**: Tailwind CSS (mobile-first)
-- **Backend**: Supabase (PostgreSQL + Auth + Storage)
-- **Monorepo**: Nx
+- **App:** Next.js 16 App Router, React 19, TypeScript
+- **UI:** Tailwind CSS, shadcn/Radix primitives, lucide-react icons
+- **Backend:** Supabase Auth, PostgreSQL, Row Level Security, Edge Functions
+- **Tooling:** Nx workspace, ESLint, Playwright/Jest dependencies
 
-## Project Structure
+## Repository Layout
 
-```
+```text
 triptrack/
 ├── apps/
-│   └── web/                    # Next.js app
-│       └── src/
-│           ├── app/            # App Router pages
-│           ├── components/     # Reusable components
-│           │   ├── ui/         # UI primitives
-│           │   └── layout/     # Layout components
-│           ├── features/       # Feature modules
-│           │   ├── journeys/   # Journey management
-│           │   ├── activities/ # Activity management
-│           │   ├── expenses/   # Expense tracking
-│           │   └── auth/       # Authentication
-│           ├── lib/
-│           │   └── supabase/   # Supabase clients
-│           ├── types/          # TypeScript types
-│           ├── utils/          # Utility functions
-│           └── hooks/          # Custom React hooks
-├── supabase-schema.sql         # Database schema
-└── package.json
+│   ├── web/                    # Next.js application
+│   │   ├── src/app/            # App Router pages and layouts
+│   │   ├── src/components/     # UI, layout, and feature components
+│   │   ├── src/lib/            # Supabase clients and shared utilities
+│   │   └── src/types/          # App and database types
+│   └── web-e2e/                # Playwright e2e project
+├── supabase/
+│   ├── functions/              # Edge Functions
+│   └── migrations/             # Incremental database migrations
+├── scripts/                    # Development/seed scripts
+├── supabase-schema.sql         # Full database schema for new projects
+├── SETUP.md                    # Short setup guide
+└── QUICK-START.md              # Minimal local quick start
 ```
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
+- Node.js 20+ recommended
+- npm
+- Supabase account and project
+- Supabase CLI if you want to push migrations from the command line
 
-- Node.js 18+ and npm
-- A Supabase account (free tier works great)
+## Local Setup
 
-### 1. Install Dependencies
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-### 2. Set Up Supabase
+Create environment files at both `.env.local` and `apps/web/.env.local`:
 
-1. Go to [Supabase](https://supabase.com) and create a new project
-2. Once your project is ready, go to **Settings > API**
-3. Copy your **Project URL** and **anon/public key**
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_APP_URL=http://localhost:4200
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
 
-### 3. Set Up the Database
+`SUPABASE_SERVICE_ROLE_KEY` is only needed for trusted local scripts such as demo seeding. Do not expose it in client code.
 
-1. In your Supabase project, go to the **SQL Editor**
-2. Copy the contents of `supabase-schema.sql`
-3. Paste and run it in the SQL Editor
-4. This will create all tables, indexes, and Row Level Security policies
+## Database Setup
 
-### 4. Configure Environment Variables
+For a new Supabase project, run the full schema:
 
-1. Update `.env.local` with your Supabase credentials:
+1. Open Supabase SQL Editor.
+2. Paste the contents of `supabase-schema.sql`.
+3. Run the SQL.
 
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=your-project-url.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-   NEXT_PUBLIC_APP_URL=http://localhost:4200
-   ```
+For an existing project, apply migrations in `supabase/migrations/`.
 
-2. Also update `apps/web/.env.local` with the same values
+Using Supabase CLI:
 
-### 5. Run the Development Server
+```bash
+supabase login
+supabase link --project-ref YOUR_PROJECT_REF
+supabase db push
+```
+
+Manual SQL Editor flow:
+
+1. Open `supabase/migrations/`.
+2. Run any migration files not yet applied to your database.
+3. Keep `supabase-schema.sql` in sync for fresh installs.
+
+Current migrations:
+
+- `add_currency_to_journeys.sql`
+- `add_paid_by_to_activities.sql`
+
+## Running The App
+
+Start the web app:
 
 ```bash
 npx nx dev web
 ```
 
-The app will be available at `http://localhost:4200`
+Open `http://localhost:4200`.
 
-## Database Schema
-
-### Tables
-
-- **profiles**: User profiles (extends Supabase auth.users)
-- **journeys**: Trip/travel information
-- **journey_participants**: Links users to shared journeys
-- **activities**: Activities and events during journeys
-- **expenses**: Expense tracking with split functionality
-
-### Key Features
-
-- Row Level Security (RLS) enabled on all tables
-- Automatic profile creation on user signup
-- Automatic timestamp updates
-- Optimized indexes for common queries
-
-## Nx Commands
-
-### Development
+Build the web app:
 
 ```bash
-# Run dev server
-npx nx dev web
-
-# Run tests
-npx nx test web
-
-# Lint code
-npx nx lint web
-
-# Build for production
-npx nx build web
-
-# View project graph
-npx nx graph
+./node_modules/.bin/next build apps/web
 ```
 
-## MVP Scope
+Run targeted lint:
 
-1. **Authentication**
-   - Sign up / Sign in with email
-   - Profile management
+```bash
+./node_modules/.bin/eslint apps/web/src
+```
 
-2. **Journey Management**
-   - Create journeys for any destination
-   - View journey details
-   - Update journey status
+Optional demo data:
 
-3. **Activity Tracking**
-   - Add activities
-   - Mark activities as complete
-   - View activity timeline
+```bash
+npm run seed:demo <your-user-id>
+```
 
-4. **Expense Management**
-   - Add expenses
-   - Categorize expenses
-   - Split expenses among participants
-   - View expense summary
+## Supabase Edge Functions
 
-## Next Steps
+TripTrack uses `send-journey-invite` to send participant invitations.
 
-1. Build authentication pages (`/login`, `/signup`)
-2. Create journey dashboard
-3. Implement activity management UI
-4. Build expense tracking and splitting features
-5. Add mobile PWA support
+Deploy functions:
+
+```bash
+supabase functions deploy
+```
+
+Required Supabase function secrets:
+
+```env
+RESEND_API_KEY=your-resend-api-key
+APP_URL=https://your-app-url
+```
+
+See `supabase/SETUP.md` and `supabase/functions/send-journey-invite/README.md` for details.
+
+## Core Routes
+
+- `/login`, `/signup`, `/forgot-password`, `/reset-password`
+- `/dashboard`
+- `/journeys`
+- `/journeys/new`
+- `/journeys/[id]`
+- `/journeys/[id]/edit`
+- `/journeys/[id]/activities/new`
+- `/journeys/[id]/activities/[activityId]/edit`
+- `/activities`
+- `/expenses`
+- `/profile`
+- `/invite/accept`
+
+## Data Model
+
+Main tables:
+
+- `profiles`: user profile data synced from Supabase Auth
+- `journeys`: trip metadata, destination, dates, owner, currency
+- `journey_participants`: shared journey membership and roles
+- `activities`: trip activities, scheduling, check-in state, cost, payer, split settings
+- `activity_participant_costs`: individual participant costs for custom splits
+- `expenses`: broader expense table
+- `pending_invites`: invitation tokens for users who have not joined yet
+
+Row Level Security is enabled on user-facing tables. Users can access journeys and activities they own or participate in.
+
+## Notes And Limitations
+
+- Activity balances use the explicit `activities.paid_by` field. Older rows are backfilled to the activity creator by migration.
+- Offline support is not implemented.
+- Push notifications are not implemented.
+- Receipt/photo uploads are not configured.
+- The Expenses page exists, but the most developed cost flow is currently activity-based splitting.
+- The Next build may need network access to fetch the configured Google font through `next/font`.
 
 ## License
 
