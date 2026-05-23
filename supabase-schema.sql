@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS journeys (
     'SEK', 'NZD', 'MXN', 'SGD', 'HKD', 'NOK', 'KRW', 'TRY',
     'INR', 'RUB', 'BRL', 'ZAR', 'DKK', 'PLN', 'THB', 'IDR',
     'HUF', 'CZK', 'ILS', 'CLP', 'PHP', 'AED', 'COP', 'SAR',
-    'MYR', 'RON', 'ARS', 'VND', 'KES', 'NGN', 'EGP', 'PKR'
+    'MYR', 'RON', 'ARS', 'VND', 'UGX', 'KES', 'NGN', 'EGP', 'PKR'
   ))
 );
 

@@ -48,6 +48,7 @@ export const CURRENCIES: Currency[] = [
   { code: 'RON', symbol: 'lei', name: 'Romanian Leu' },
   { code: 'ARS', symbol: 'AR$', name: 'Argentine Peso' },
   { code: 'VND', symbol: '₫', name: 'Vietnamese Dong' },
+  { code: 'UGX', symbol: 'USh', name: 'Ugandan Shilling' },
   { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
   { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
   { code: 'EGP', symbol: 'E£', name: 'Egyptian Pound' },
