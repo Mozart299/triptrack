@@ -2,6 +2,8 @@
 
 TripTrack is a mobile-friendly trip planning and shared-cost web app. It helps travelers create journeys, plan activities, invite participants, check in to trip events, and track who owes what.
 
+How the app, Supabase and the database fit together is described in [`docs/architecture.md`](docs/architecture.md).
+
 ## Features
 
 - Email/password authentication with Supabase Auth
