@@ -50,3 +50,6 @@ out
 .env*.local
 
 test-output
+
+# Supabase CLI local state
+supabase/.temp/
