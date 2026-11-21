@@ -53,6 +53,20 @@ serve(async (req) => {
     // Create Supabase admin client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // The service-role client bypasses RLS, so verify the caller here.
+    const accessToken = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
+    const { data: callerData } = accessToken
+      ? await supabase.auth.getUser(accessToken)
+      : { data: { user: null } };
+    const caller = callerData.user;
+
+    if (!caller) {
+      return new Response(
+        JSON.stringify({ error: 'You must be signed in to invite people' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Get journey details
     const { data: journey, error: journeyError } = await supabase
       .from('journeys')
@@ -64,6 +78,14 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Journey not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Only the journey owner may add participants, matching the RLS policy on journey_participants.
+    if (journey.user_id !== caller.id) {
+      return new Response(
+        JSON.stringify({ error: 'Only the journey owner can invite people' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

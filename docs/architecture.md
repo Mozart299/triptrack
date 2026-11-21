@@ -43,7 +43,7 @@ flowchart LR
 | **Client components** | `components/features/*` | Create, edit, delete, check in, and mark paid. They write straight to Supabase with the browser client |
 | **Supabase clients** | `lib/supabase/{client,server,admin}.ts` | Browser client, cookie-aware server client, and a service-role client that bypasses RLS |
 | **Database** | `supabase-schema.sql`, `supabase/migrations/` | Tables, RLS policies, helper functions and triggers |
-| **Edge Function** | `supabase/functions/send-journey-invite` | Adds existing users to a journey and emails the invitation through Resend |
+| **Edge Function** | `supabase/functions/send-journey-invite` | Checks the caller owns the journey, adds existing users to it, and emails the invitation through Resend |
 
 ## 2. Data model
 
@@ -96,8 +96,10 @@ sequenceDiagram
     participant PG as PostgreSQL
     participant RS as Resend
     O->>UI: Enter friend's email
-    UI->>EF: invoke {journeyId, inviteeEmail, inviterName}
-    EF->>PG: Load journey, look up profile by email
+    UI->>EF: invoke {journeyId, inviteeEmail, inviterName} + user JWT
+    EF->>PG: Verify the JWT, load the journey
+    Note over EF: 401 if not signed in, 403 unless the caller owns the journey
+    EF->>PG: Look up profile by email
     alt Already has an account
         EF->>PG: Insert journey_participants (participant)
         EF->>RS: "You've been invited to {trip}" + trip link

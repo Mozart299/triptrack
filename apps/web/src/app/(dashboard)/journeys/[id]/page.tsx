@@ -452,7 +452,7 @@ export default async function JourneyDetailPage({
                 </div>
               )}
 
-              <InviteParticipant journeyId={id} />
+              {isOwner && <InviteParticipant journeyId={id} />}
             </CardContent>
           </Card>
 
